@@ -1651,9 +1651,29 @@ function captureViewport(scale=2){
   renderer.render(scene, camera);
   return url;
 }
+let exportObjUrl = null; // persistent object URL behind the Download / Open-in-tab links
+
+function dataUrlToBlob(url){
+  const parts = url.split(',');
+  const mime = (parts[0].match(/data:([^;,]+)/) || [])[1] || 'image/png';
+  const bin = atob(parts[1]);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], {type:mime});
+}
 function download(url, name){
-  const a = document.createElement('a');
-  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  // Best-effort instant save (blob URL + scripted anchor click).
+  // Some browsers and embedded previews block scripted downloads —
+  // the real Download link in the export modal is the fallback for those.
+  try{
+    const objUrl = URL.createObjectURL(dataUrlToBlob(url));
+    const a = document.createElement('a');
+    a.href = objUrl; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(objUrl), 60000);
+  }catch(e){ /* the visible Download link in the modal covers this */ }
 }
 const slug = s => (s||'project').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'project';
 
@@ -1720,10 +1740,12 @@ async function composeConceptSheet(){
 }
 
 function openExportModal(){
-  let fmt = 'png', scale = 2, lastUrl = null, lastName = '';
+  let fmt = 'png', scale = 2;
+  const embedded = (()=>{ try{ return window.self !== window.top; }catch(e){ return true; } })();
   openModal(`
     <div class="m-head"><i data-lucide="download"></i><h3>Export</h3><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
     <div class="m-body">
+      ${embedded ? `<div class="note" style="margin-bottom:14px"><b>Running inside an embedded preview.</b> Browsers often block file downloads from embedded frames — if nothing saves, right-click the preview image and choose “Save image as…”, or open this studio in its own browser tab, where the Download button works normally.</div>` : ''}
       <div class="sec"><div class="sec-t">Image options</div>
         <div class="row" style="gap:16px; margin-bottom:14px">
           <div><div style="font-size:11.5px;color:var(--ink2);margin-bottom:6px">Format</div>
@@ -1736,11 +1758,15 @@ function openExportModal(){
           <button class="btn" id="expSheet" style="justify-content:space-between"><span class="row" style="gap:8px"><i data-lucide="presentation"></i>Concept sheet</span><span style="font-size:11px;color:var(--mut)">Branded presentation document</span></button>
         </div>
       </div>
-      <div class="export-preview" id="expPreview"><img id="expImg" alt="Export preview"></div>
+      <div class="export-preview" id="expPreview">
+        <img id="expImg" alt="Export preview">
+        <div style="font-size:10.5px; color:var(--mut); margin-top:6px; text-align:center">You can also right-click the image and “Save image as…”</div>
+      </div>
     </div>
     <div class="m-foot">
       <button class="btn" data-close>Close</button>
-      <button class="btn primary" id="expDownload" disabled><i data-lucide="download"></i>Download</button>
+      <a class="btn" id="expOpen" target="_blank" rel="noopener" style="display:none; text-decoration:none"><i data-lucide="external-link"></i>Open in tab</a>
+      <a class="btn primary" id="expDownload" style="opacity:.45; pointer-events:none; text-decoration:none"><i data-lucide="download"></i>Download</a>
     </div>`);
   const card = $('modalCard');
   card.querySelectorAll('[data-fmt]').forEach(b=>b.addEventListener('click', ()=>{
@@ -1752,10 +1778,21 @@ function openExportModal(){
     card.querySelectorAll('[data-scale]').forEach(x=>x.classList.toggle('active', x===b));
   }));
   const setLoading = (btn, on)=>{ btn.classList.toggle('loading', on); };
-  const showResult = (url, name)=>{
-    lastUrl = url; lastName = name;
-    $('expImg').src = url; $('expPreview').style.display = 'block';
-    $('expDownload').disabled = false;
+  const showResult = (dataUrl, name)=>{
+    // One persistent blob URL powers the real Download link, the
+    // Open-in-tab link, and the best-effort instant save.
+    if(exportObjUrl && exportObjUrl.startsWith('blob:')) URL.revokeObjectURL(exportObjUrl);
+    try{ exportObjUrl = URL.createObjectURL(dataUrlToBlob(dataUrl)); }
+    catch(e){ exportObjUrl = dataUrl; }
+    const dl = $('expDownload');
+    dl.href = exportObjUrl;
+    dl.setAttribute('download', name);
+    dl.style.opacity = 1; dl.style.pointerEvents = 'auto';
+    const op = $('expOpen');
+    op.href = exportObjUrl;
+    op.style.display = 'inline-flex';
+    $('expImg').src = dataUrl;
+    $('expPreview').style.display = 'block';
   };
   $('expView').addEventListener('click', function(){
     setLoading(this, true);
@@ -1772,8 +1809,10 @@ function openExportModal(){
           cx.drawImage(img, 0, 0);
           url = c2.toDataURL('image/jpeg', .92);
         } else url = captureViewport(scale);
-        showResult(url, `${slug(state.projectName)}-viewport.${fmt}`);
-        toast('Viewport captured — ready to download', 'success');
+        const name = `${slug(state.projectName)}-viewport.${fmt}`;
+        showResult(url, name);
+        download(url, name); // best-effort instant save; the Download link covers blocked environments
+        toast("Image ready — if it didn't save automatically, click Download", 'success');
       }catch(err){ toast('Export failed: ' + err.message, 'error'); }
       setLoading(this, false);
     }, 40);
@@ -1782,13 +1821,12 @@ function openExportModal(){
     setLoading(this, true);
     try{
       const url = await composeConceptSheet();
-      showResult(url, `${slug(state.projectName)}-concept-sheet.png`);
-      toast('Concept sheet composed — ready to download', 'success');
+      const name = `${slug(state.projectName)}-concept-sheet.png`;
+      showResult(url, name);
+      download(url, name);
+      toast("Sheet ready — if it didn't save automatically, click Download", 'success');
     }catch(err){ toast('Sheet generation failed: ' + err.message, 'error'); }
     setLoading(this, false);
-  });
-  $('expDownload').addEventListener('click', ()=>{
-    if(lastUrl){ download(lastUrl, lastName); toast('Saved to your downloads', 'success'); }
   });
 }
 
