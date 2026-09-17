@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand Experience Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+} }
+</script>
+<style>
+:root{
+  --paper:#F7F3EB; --panel:#FAF7F0; --panel2:#F2EDE2; --panel3:#EDE7D9;
+  --line:#E4DDCF; --line2:#D6CDBB;
+  --ink:#26221C; --ink2:#5C564B; --mut:#98907F;
+  --accent:#C05B33; --accent-ink:#FBF8F2; --accent-soft:color-mix(in srgb, var(--accent) 13%, #fff);
+  --shadow-1:0 1px 2px rgba(46,38,26,.06), 0 8px 24px rgba(46,38,26,.08);
+  --shadow-2:0 2px 6px rgba(46,38,26,.08), 0 18px 50px rgba(46,38,26,.14);
+  --r-sm:7px; --r-md:10px; --r-lg:14px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%; overflow:hidden}
+body{font-family:'Instrument Sans',sans-serif; background:var(--paper); color:var(--ink); font-size:13px; -webkit-font-smoothing:antialiased; user-select:none}
+input,textarea{user-select:text; font-family:inherit}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+svg.lucide{width:16px; height:16px; stroke-width:1.9}
+::-webkit-scrollbar{width:9px}
+::-webkit-scrollbar-thumb{background:#D5CCBA; border-radius:8px; border:2px solid var(--panel)}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- Viewport ---------- */
+#viewport{position:fixed; inset:0; z-index:0}
+#viewport canvas{display:block}
+
+/* ---------- Topbar ---------- */
+#topbar{position:fixed; top:0; left:0; right:0; height:56px; z-index:30; display:flex; align-items:center; gap:14px; padding:0 14px 0 16px; background:rgba(250,247,240,.94); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); transition:transform .4s cubic-bezier(.6,0,.2,1), opacity .3s}
+.tb-left{display:flex; align-items:center; gap:12px; min-width:0}
+.logo-mark{width:28px; height:28px; flex:none}
+.wordmark{font-family:'Space Grotesk'; font-size:14.5px; letter-spacing:-.01em; white-space:nowrap; color:var(--ink2)}
+.wordmark b{color:var(--ink); font-weight:700}
+.tb-div{width:1px; height:22px; background:var(--line2); flex:none}
+#projectName{width:210px; background:transparent; border:1px solid transparent; border-radius:var(--r-sm); padding:5px 8px; font-size:13px; font-weight:500; color:var(--ink); transition:.15s}
+#projectName:hover{border-color:var(--line)}
+#projectName:focus{outline:none; border-color:var(--accent); background:#fff}
+.tb-center{display:flex; align-items:center; gap:8px; margin-left:auto}
+.tb-right{display:flex; align-items:center; gap:10px; margin-left:auto}
+.mode-pill{display:flex; align-items:center; gap:8px; height:30px; padding:0 12px; border:1px solid var(--line); border-radius:99px; background:var(--panel2); font-size:12px; color:var(--ink2); white-space:nowrap}
+.mode-pill .dot{width:7px; height:7px; border-radius:50%; background:var(--accent); flex:none}
+.save-status{font-size:11.5px; color:var(--mut); display:flex; align-items:center; gap:6px; white-space:nowrap}
+.save-status i{width:6px; height:6px; border-radius:50%; background:#7C8B57; display:inline-block}
+.save-status[data-state=saving] i{background:#C2913A; animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.avatar{width:32px; height:32px; border-radius:50%; background:var(--ink); color:#F4EFE5; display:flex; align-items:center; justify-content:center; flex:none}
+.avatar svg{width:15px; height:15px}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex; align-items:center; gap:7px; height:32px; padding:0 13px; border-radius:8px; font-size:12.5px; font-weight:500; border:1px solid var(--line); background:#fff; color:var(--ink); transition:.15s; white-space:nowrap}
+.btn:hover{border-color:var(--line2); background:var(--panel2)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.btn.primary:hover{background:color-mix(in srgb, var(--accent) 88%, #000)}
+.btn.ghost{background:transparent}
+.btn.ghost:hover{background:var(--panel2)}
+.icon-btn{width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; color:var(--ink2); border:1px solid transparent; transition:.15s; flex:none}
+.icon-btn:hover{background:var(--panel2); color:var(--ink)}
+.icon-btn:disabled{opacity:.35; pointer-events:none}
+.icon-btn.active{background:var(--accent-soft); color:var(--accent); border-color:color-mix(in srgb, var(--accent) 30%, transparent)}
+.icon-btn.sm{width:26px; height:26px}
+.icon-btn.sm svg{width:13.5px; height:13.5px}
+.icon-btn.danger:hover{background:#F3E0D8; color:#A2401F}
+
+/* ---------- Side panels ---------- */
+.side{position:fixed; top:56px; bottom:0; z-index:20; display:flex; flex-direction:column; background:var(--panel); transition:transform .38s cubic-bezier(.6,0,.2,1); box-shadow:var(--shadow-1)}
+#leftPanel{left:0; width:288px; border-right:1px solid var(--line); background:#F5F1E8}
+#rightPanel{right:0; width:324px; border-left:1px solid var(--line)}
+body.left-closed #leftPanel{transform:translateX(-102%)}
+body.right-closed #rightPanel{transform:translateX(102%)}
+.edge-tab{position:fixed; z-index:21; top:68px; width:34px; height:38px; background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); display:none; align-items:center; justify-content:center; color:var(--ink2); box-shadow:var(--shadow-1)}
+.edge-tab:hover{color:var(--ink); background:var(--panel2)}
+#leftReopen{left:12px} #rightReopen{right:12px}
+body.left-closed #leftReopen{display:flex}
+body.right-closed #rightReopen{display:flex}
+.panel-head{display:flex; align-items:center; gap:8px; padding:13px 14px 11px; border-bottom:1px solid var(--line)}
+.panel-head h2{font-family:'Space Grotesk'; font-size:13px; font-weight:600; letter-spacing:.01em; flex:1}
+.panel-head .icon-btn{margin-left:auto}
+.panel-head .icon-btn + .icon-btn{margin-left:0}
+
+/* Library */
+#libSearch{margin:12px 14px 4px; display:flex; align-items:center; gap:8px; height:32px; padding:0 10px; background:#fff; border:1px solid var(--line); border-radius:8px; color:var(--mut)}
+#libSearch:focus-within{border-color:var(--accent)}
+#libSearch input{border:none; outline:none; background:none; flex:1; font-size:12.5px; color:var(--ink); min-width:0}
+#libSearch svg{width:14px; height:14px; flex:none}
+#libraryList{flex:1; overflow-y:auto; padding:6px 10px 16px}
+.lib-head{display:flex; align-items:center; gap:6px; width:100%; padding:9px 6px; font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--mut); border-radius:var(--r-sm)}
+.lib-head:hover{color:var(--ink2)}
+.lib-head svg{width:14px; height:14px}
+.lib-head em{font-style:normal; margin-left:auto; font-size:10.5px; letter-spacing:0; background:var(--panel3); border-radius:99px; padding:1px 7px; color:var(--ink2)}
+.lib-item{display:flex; align-items:center; gap:10px; width:100%; padding:7px 8px; border-radius:var(--r-md); border:1px solid transparent; text-align:left; transition:.13s}
+.lib-item:hover{background:#fff; border-color:var(--line); box-shadow:0 1px 3px rgba(46,38,26,.05)}
+.lib-ico{width:38px; height:38px; flex:none; background:var(--panel2); border:1px solid var(--line); border-radius:9px; display:flex; align-items:center; justify-content:center; color:var(--ink2)}
+.lib-item:hover .lib-ico{background:var(--accent-soft); color:var(--accent); border-color:color-mix(in srgb, var(--accent) 25%, transparent)}
+.lib-txt{flex:1; min-width:0}
+.lib-txt b{display:block; font-size:12.5px; font-weight:500; color:var(--ink)}
+.lib-txt small{display:block; font-size:10.5px; color:var(--mut); margin-top:1px}
+.lib-cost{font-size:11px; color:var(--ink2); font-variant-numeric:tabular-nums}
+.lib-add{width:24px; height:24px; border-radius:6px; background:var(--ink); color:#F4EFE5; display:flex; align-items:center; justify-content:center; opacity:0; transition:.15s; flex:none}
+.lib-add svg{width:13px; height:13px}
+.lib-item:hover .lib-add{opacity:1}
+.lib-item:hover .lib-cost{display:none}
+.lib-empty{padding:40px 20px; text-align:center; color:var(--mut)}
+.lib-empty svg{width:22px; height:22px; margin-bottom:8px}
+.lib-empty p{font-size:12px; line-height:1.5}
+
+/* Right tabs */
+#tabs{display:flex; border-bottom:1px solid var(--line); background:var(--panel2)}
+#tabs button{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 0 8px; font-size:10px; font-weight:600; letter-spacing:.03em; color:var(--mut); border-bottom:2px solid transparent; transition:.15s}
+#tabs button svg{width:16px; height:16px}
+#tabs button:hover{color:var(--ink2)}
+#tabs button.active{color:var(--accent); border-bottom-color:var(--accent)}
+#panelBody{flex:1; overflow-y:auto; padding:16px 16px 24px}
+
+/* Panel primitives */
+.sec{margin-bottom:20px}
+.sec-t{display:flex; align-items:center; gap:7px; font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--mut); margin-bottom:10px}
+.sec-t::after{content:''; flex:1; height:1px; background:var(--line)}
+.field{display:block; margin-bottom:10px}
+.field>span{display:block; font-size:11.5px; color:var(--ink2); margin-bottom:5px}
+.inp{width:100%; height:32px; padding:0 10px; background:#fff; border:1px solid var(--line); border-radius:8px; font-size:12.5px; color:var(--ink); outline:none; transition:.15s}
+.inp:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+select.inp{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2398907F' stroke-width='2.4'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:28px}
+.num{width:100%; height:27px; padding:0 6px; background:#fff; border:1px solid var(--line); border-radius:6px; font-size:12px; color:var(--ink); outline:none; font-variant-numeric:tabular-nums; transition:.15s; -moz-appearance:textfield}
+.num::-webkit-inner-spin-button{display:none}
+.num:focus{border-color:var(--accent)}
+.trow{display:grid; grid-template-columns:56px 1fr 1fr 1fr; gap:6px; align-items:center; margin-bottom:7px}
+.tlab{font-size:11px; color:var(--ink2)}
+.axwrap{display:flex; align-items:center; gap:4px}
+.ax{font-size:9.5px; font-weight:700; width:11px; flex:none}
+.ax-x{color:#B3543F}.ax-y{color:#7C8B57}.ax-z{color:#5E7B8C}
+.srow{margin-bottom:12px}
+.srow .sl{display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink2); margin-bottom:5px}
+.srow .sl b{font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none; width:100%; height:20px; background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:3px; border-radius:2px; background:var(--line2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff; border:2px solid var(--accent); margin-top:-5.5px; transition:.12s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+input[type=range]::-moz-range-track{height:3px; border-radius:2px; background:var(--line2)}
+input[type=range]::-moz-range-thumb{width:11px; height:11px; border-radius:50%; background:#fff; border:2px solid var(--accent)}
+.switch{position:relative; width:34px; height:20px; flex:none; display:inline-block; cursor:pointer}
+.switch input{position:absolute; opacity:0; inset:0; cursor:pointer}
+.switch i{position:absolute; inset:0; background:var(--line2); border-radius:99px; transition:.18s}
+.switch i::after{content:''; position:absolute; top:3px; left:3px; width:14px; height:14px; border-radius:50%; background:#fff; transition:.18s; box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked+i{background:var(--accent)}
+.switch input:checked+i::after{left:17px}
+.row{display:flex; align-items:center; gap:8px}
+.row.between{justify-content:space-between}
+.seg{display:inline-flex; background:var(--panel3); border-radius:9px; padding:3px; gap:2px}
+.seg button{padding:5px 11px; border-radius:7px; font-size:11.5px; font-weight:500; color:var(--ink2); transition:.14s; white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button.active{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(46,38,26,.12)}
+.chip{padding:6px 12px; border:1px solid var(--line); background:#fff; border-radius:99px; font-size:11.5px; color:var(--ink2); transition:.14s}
+.chip:hover{border-color:var(--line2); color:var(--ink)}
+.chip.active{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+.note{font-size:11px; line-height:1.55; color:var(--mut); padding:10px 12px; background:var(--panel2); border-radius:var(--r-md); border:1px solid var(--line)}
+.empty-state{padding:44px 16px; text-align:center; color:var(--mut)}
+.empty-state svg{width:26px; height:26px; margin-bottom:10px; opacity:.7}
+.empty-state p{font-size:12.5px; line-height:1.6; color:var(--ink2)}
+.empty-state small{display:block; margin-top:6px; font-size:11px; color:var(--mut)}
+.obj-head{display:flex; align-items:center; gap:8px; margin-bottom:16px}
+.badge{font-size:10px; font-weight:600; letter-spacing:.04em; padding:3px 8px; border-radius:99px; background:var(--panel3); color:var(--ink2); white-space:nowrap}
+.badge.brand{background:var(--accent-soft); color:var(--accent)}
+.act-row{display:flex; gap:8px; flex-wrap:wrap}
+.act-row .btn{height:30px; padding:0 11px; font-size:11.5px}
+.swatches{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+.swatch{width:24px; height:24px; border-radius:7px; border:1px solid rgba(0,0,0,.12); cursor:pointer; transition:.12s}
+.swatch:hover{transform:scale(1.14)}
+.color-row{display:flex; align-items:center; gap:8px; margin-bottom:4px}
+.color-row input[type=color]{width:34px; height:34px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:3px; cursor:pointer}
+.hex{font-size:11px; color:var(--mut); font-variant-numeric:tabular-nums}
+.drop{border:1.5px dashed var(--line2); border-radius:var(--r-md); padding:18px 14px; text-align:center; color:var(--mut); font-size:11.5px; line-height:1.5; cursor:pointer; transition:.15s; display:block; width:100%}
+.drop:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+.drop svg{width:18px; height:18px; margin-bottom:6px}
+.logo-preview{display:flex; align-items:center; gap:10px; padding:8px; background:#fff; border:1px solid var(--line); border-radius:var(--r-md)}
+.logo-preview img{width:52px; height:52px; object-fit:contain; border-radius:6px; background:var(--panel2); padding:4px}
+.scene-row{display:flex; align-items:center; gap:9px; width:100%; padding:6px 8px; border-radius:var(--r-sm); border:1px solid transparent; transition:.12s; text-align:left}
+.scene-row:hover{background:#fff; border-color:var(--line)}
+.scene-row.selected{background:var(--accent-soft); border-color:color-mix(in srgb, var(--accent) 32%, transparent)}
+.scene-row .ico{width:28px; height:28px; flex:none; border-radius:7px; background:var(--panel2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--ink2)}
+.scene-row.selected .ico{background:#fff; color:var(--accent)}
+.scene-row .ico svg{width:14px; height:14px}
+.scene-row .nm{flex:1; min-width:0}
+.scene-row .nm b{display:block; font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.scene-row .nm small{font-size:10px; color:var(--mut)}
+.scene-row .eye-off-row{color:#CBBFA8}
+.scene-row input{width:100%; height:24px; border:1px solid var(--accent); border-radius:5px; padding:0 6px; font-size:12px; outline:none}
+.cost-row{display:flex; align-items:baseline; gap:8px; padding:8px 2px; border-bottom:1px solid var(--line)}
+.cost-row .cn{flex:1; font-size:12px; color:var(--ink2)}
+.cost-row .cn em{font-style:normal; color:var(--mut); font-size:11px; margin-left:5px}
+.cost-row .cv{font-variant-numeric:tabular-nums; font-size:12.5px; font-weight:500}
+.cost-total{display:flex; align-items:baseline; justify-content:space-between; padding:16px 2px 4px}
+.cost-total b{font-family:'Space Grotesk'; font-size:24px; font-weight:600; letter-spacing:-.01em}
+
+/* ---------- Toolbar ---------- */
+#toolbar{position:fixed; top:68px; left:50%; transform:translateX(-50%); z-index:25; display:flex; align-items:center; gap:4px; height:42px; padding:0 7px; background:rgba(251,248,241,.93); backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-1); transition:opacity .3s, transform .3s}
+.tb-sep{width:1px; height:22px; background:var(--line2); margin:0 4px}
+#viewSeg button{padding:5px 10px}
+#statusbar{position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:15; padding:6px 14px; background:rgba(38,34,28,.82); color:#E8E2D4; border-radius:99px; font-size:11px; letter-spacing:.02em; backdrop-filter:blur(4px); transition:opacity .3s; white-space:nowrap}
+body.present #topbar{transform:translateY(-105%); opacity:0; pointer-events:none}
+body.present #leftPanel, body.present #rightPanel{transform:translateX(-105%)}
+body.present #rightPanel{transform:translateX(105%)}
+body.present #toolbar, body.present #statusbar, body.present .edge-tab{opacity:0; pointer-events:none}
+body.present #leftReopen, body.present #rightReopen{display:none!important}
+#caption{position:fixed; bottom:34px; left:50%; transform:translateX(-50%) translateY(12px); z-index:16; text-align:center; opacity:0; transition:.5s .2s; pointer-events:none; padding:14px 26px; background:rgba(250,247,240,.86); backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-1)}
+body.present #caption{opacity:1; transform:translateX(-50%) translateY(0)}
+#caption .cap-rule{width:30px; height:2px; background:var(--accent); margin:0 auto 9px}
+#caption .cap-name{font-family:'Space Grotesk'; font-size:21px; font-weight:600; letter-spacing:-.01em}
+#caption .cap-tag{font-size:12px; color:var(--ink2); margin-top:3px}
+#caption .cap-esc{font-size:10px; color:var(--mut); margin-top:9px; letter-spacing:.05em; text-transform:uppercase}
+#exitPresent{position:fixed; bottom:20px; right:20px; z-index:26; display:none; align-items:center; gap:8px; height:34px; padding:0 14px; background:var(--ink); color:#F4EFE5; border-radius:99px; font-size:12px; box-shadow:var(--shadow-2)}
+body.present #exitPresent{display:flex}
+#hoverTag{position:fixed; z-index:40; pointer-events:none; padding:4px 9px; background:rgba(38,34,28,.88); color:#F0EBDE; border-radius:6px; font-size:11px; display:none; white-space:nowrap}
+
+/* ---------- Tooltips ---------- */
+[data-tip]{position:relative}
+[data-tip]::after{content:attr(data-tip); position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(2px); background:var(--ink); color:#F4EFE5; font-size:10.5px; font-weight:400; letter-spacing:.01em; padding:5px 9px; border-radius:6px; white-space:nowrap; opacity:0; pointer-events:none; transition:.14s; z-index:60}
+[data-tip]:hover::after{opacity:1; transform:translateX(-50%) translateY(0)}
+[data-tip].tip-l::after{left:auto; right:0; transform:translateX(0) translateY(2px)}
+[data-tip].tip-l:hover::after{transform:translateX(0) translateY(0)}
+
+/* ---------- Modal ---------- */
+#modalBackdrop{position:fixed; inset:0; z-index:80; background:rgba(30,25,19,.42); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:.22s}
+#modalBackdrop.show{opacity:1; pointer-events:auto}
+#modalCard{width:600px; max-width:calc(100vw - 40px); max-height:calc(100vh - 60px); overflow-y:auto; background:var(--panel); border-radius:16px; box-shadow:var(--shadow-2); transform:translateY(10px) scale(.98); transition:.22s}
+#modalBackdrop.show #modalCard{transform:none}
+.m-head{display:flex; align-items:center; gap:10px; padding:18px 20px 14px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--panel); z-index:2}
+.m-head h3{font-family:'Space Grotesk'; font-size:16px; font-weight:600; flex:1}
+.m-body{padding:20px}
+.m-foot{display:flex; justify-content:flex-end; gap:10px; padding:0 20px 20px}
+.tpl-row{display:flex; gap:14px; width:100%; padding:12px; border:1px solid var(--line); border-radius:var(--r-lg); background:#fff; text-align:left; transition:.15s; margin-bottom:10px; align-items:center}
+.tpl-row:hover{border-color:var(--accent); box-shadow:var(--shadow-1)}
+.tpl-row.active{border-color:var(--accent); background:var(--accent-soft)}
+.tpl-thumb{width:76px; height:58px; border-radius:9px; border:1px solid var(--line); flex:none; position:relative; overflow:hidden}
+.tpl-thumb .b1,.tpl-thumb .b2,.tpl-thumb .b3{position:absolute; bottom:9px; border-radius:2px}
+.tpl-thumb .a{position:absolute; right:7px; bottom:9px; width:7px; height:7px; border-radius:50%}
+.tpl-info{flex:1; min-width:0}
+.tpl-info b{display:block; font-family:'Space Grotesk'; font-size:13.5px; font-weight:600; margin-bottom:3px}
+.tpl-info p{font-size:11.5px; color:var(--ink2); line-height:1.5}
+.tpl-tag{font-size:10px; color:var(--mut); letter-spacing:.04em; text-transform:uppercase; flex:none}
+.kbd-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 26px}
+.kbd-row{display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:12px; color:var(--ink2)}
+.kbd-row kbd{font-family:'Space Grotesk'; font-size:10.5px; background:var(--panel3); border:1px solid var(--line2); border-bottom-width:2px; border-radius:5px; padding:2px 7px; color:var(--ink)}
+.export-preview{margin-top:16px; border:1px solid var(--line); border-radius:var(--r-md); background:#fff; padding:8px; display:none}
+.export-preview img{width:100%; display:block; border-radius:7px}
+.spin{width:13px; height:13px; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none}
+.btn.loading .spin{display:block}
+.btn.loading .btn-lab{display:none}
+.btn.loading{pointer-events:none; opacity:.85}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- Toasts ---------- */
+#toasts{position:fixed; bottom:20px; right:20px; z-index:90; display:flex; flex-direction:column; gap:8px; align-items:flex-end}
+.toast{display:flex; align-items:center; gap:10px; padding:11px 15px; background:#26221C; color:#F0EBDE; border-radius:11px; box-shadow:var(--shadow-2); font-size:12.5px; max-width:340px; animation:toastIn .28s cubic-bezier(.2,.9,.3,1.2)}
+.toast svg{width:15px; height:15px; flex:none}
+.toast.success svg{color:#9DB37A}
+.toast.error svg{color:#E08058}
+.toast.info svg{color:var(--accent); filter:brightness(1.4)}
+@keyframes toastIn{from{opacity:0; transform:translateY(12px) scale(.96)}}
+.toast.out{opacity:0; transform:translateY(6px); transition:.25s}
+
+/* ---------- Boot ---------- */
+#boot{position:fixed; inset:0; z-index:100; background:var(--paper); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; transition:opacity .55s}
+#boot.hide{opacity:0; pointer-events:none}
+.boot-mark{width:56px; height:56px; animation:markSpin 7s linear infinite}
+@keyframes markSpin{to{transform:rotate(360deg)}}
+#boot h1{font-family:'Space Grotesk'; font-size:19px; font-weight:600; letter-spacing:-.01em}
+#boot h1 b{font-weight:700}
+#boot .sub{font-size:12px; color:var(--mut); margin-top:-14px}
+.boot-bar{width:180px; height:2px; background:var(--line); border-radius:2px; overflow:hidden; position:relative}
+.boot-bar::after{content:''; position:absolute; top:0; bottom:0; width:60px; background:var(--accent); border-radius:2px; animation:scan 1.1s ease-in-out infinite}
+@keyframes scan{0%{left:-60px} 100%{left:180px}}
+#boot .err{display:none; max-width:420px; text-align:center; background:#fff; border:1px solid var(--line); border-radius:var(--r-lg); padding:22px}
+#boot.failed .err{display:block}
+#boot.failed .boot-bar, #boot.failed .sub{display:none}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <svg class="boot-mark" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="14" height="14" rx="3.5" fill="none" stroke="#26221C" stroke-width="2"/><circle cx="15.5" cy="15.5" r="6" fill="var(--accent)"/></svg>
+  <h1>Brand Experience <b>Studio</b></h1>
+  <div class="sub">Preparing studio environment</div>
+  <div class="boot-bar"></div>
+  <div class="err">
+    <p style="font-size:13px; line-height:1.6; color:var(--ink2)" id="bootErrMsg"></p>
+  </div>
+</div>
+
+<div id="viewport"></div>
+
+<header id="topbar">
+  <div class="tb-left">
+    <svg class="logo-mark" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="14" height="14" rx="3.5" fill="none" stroke="#26221C" stroke-width="2"/><circle cx="15.5" cy="15.5" r="6" fill="var(--accent)"/></svg>
+    <div class="wordmark">Brand Experience <b>Studio</b></div>
+    <span class="tb-div"></span>
+    <input id="projectName" spellcheck="false" value="Untitled Experience" data-tip="Project name">
+  </div>
+  <div class="tb-center">
+    <button class="btn ghost" id="btnTemplates"><i data-lucide="layout-template"></i>Templates</button>
+    <div class="mode-pill"><span class="dot"></span><span id="modeLabel">Editing</span></div>
+    <button class="icon-btn" id="btnUndo" data-tip="Undo — Ctrl+Z"><i data-lucide="undo-2"></i></button>
+    <button class="icon-btn" id="btnRedo" data-tip="Redo — Ctrl+Shift+Z"><i data-lucide="redo-2"></i></button>
+  </div>
+  <div class="tb-right">
+    <span class="save-status" id="saveStatus" data-state="saved" data-tip="Changes autosave to this browser"><i></i><span>Saved</span></span>
+    <button class="btn ghost" id="btnPreview"><i data-lucide="play"></i>Preview</button>
+    <button class="btn primary" id="btnExport"><i data-lucide="download"></i>Export</button>
+    <div class="avatar" data-tip="Local workspace — no account needed"><i data-lucide="user"></i></div>
+  </div>
+</header>
+
+<aside id="leftPanel" class="side">
+  <div class="panel-head">
+    <h2>Asset Library</h2>
+    <button class="icon-btn sm" id="leftCollapse" data-tip="Collapse panel"><i data-lucide="panel-left"></i></button>
+  </div>
+  <div id="libSearch"><i data-lucide="search"></i><input id="libSearchInp" placeholder="Search assets" spellcheck="false"></div>
+  <div id="libraryList"></div>
+</aside>
+<button class="edge-tab" id="leftReopen" data-tip="Asset library"><i data-lucide="panel-left-open"></i></button>
+
+<aside id="rightPanel" class="side">
+  <nav id="tabs">
+    <button data-tab="inspect" class="active"><i data-lucide="sliders-horizontal"></i>Inspect</button>
+    <button data-tab="scene"><i data-lucide="list"></i>Scene</button>
+    <button data-tab="brand"><i data-lucide="palette"></i>Brand</button>
+    <button data-tab="light"><i data-lucide="sun-medium"></i>Light</button>
+    <button data-tab="cost"><i data-lucide="banknote"></i>Cost</button>
+  </nav>
+  <div id="panelBody"></div>
+  <div class="panel-head" style="border-top:1px solid var(--line); border-bottom:none; padding:9px 14px">
+    <span style="font-size:10.5px; color:var(--mut); flex:1">Brand Experience Studio</span>
+    <button class="icon-btn sm" id="rightCollapse" data-tip="Collapse panel"><i data-lucide="panel-right"></i></button>
+  </div>
+</aside>
+<button class="edge-tab" id="rightReopen" data-tip="Properties"><i data-lucide="panel-right-open"></i></button>
+
+<div id="toolbar">
+  <button class="icon-btn active" data-act="translate" data-tip="Move — W"><i data-lucide="move-3d"></i></button>
+  <button class="icon-btn" data-act="rotate" data-tip="Rotate — E"><i data-lucide="rotate-3d"></i></button>
+  <button class="icon-btn" data-act="scale" data-tip="Scale — R"><i data-lucide="scale-3d"></i></button>
+  <span class="tb-sep"></span>
+  <div class="seg" id="viewSeg">
+    <button data-view="orbit" class="active">Orbit</button>
+    <button data-view="front">Front</button>
+    <button data-view="top">Top</button>
+    <button data-view="present">Present</button>
+  </div>
+  <span class="tb-sep"></span>
+  <button class="icon-btn" data-act="focus" data-tip="Focus selection — F"><i data-lucide="focus"></i></button>
+  <button class="icon-btn" data-act="resetcam" data-tip="Reset camera"><i data-lucide="rotate-ccw"></i></button>
+  <button class="icon-btn active" data-act="grid" data-tip="Toggle grid — G"><i data-lucide="grid-3x3"></i></button>
+  <button class="icon-btn" data-act="keys" data-tip="Keyboard shortcuts"><i data-lucide="keyboard"></i></button>
+</div>
+
+<div id="statusbar"></div>
+<div id="hoverTag"></div>
+<div id="caption">
+  <div class="cap-rule"></div>
+  <div class="cap-name"></div>
+  <div class="cap-tag"></div>
+  <div class="cap-esc">Esc to exit</div>
+</div>
+<button id="exitPresent"><i data-lucide="x"></i>Exit presentation</button>
+
+<div id="modalBackdrop"><div id="modalCard"></div></div>
+<div id="toasts"></div>
+<input type="file" id="logoFile" accept="image/*" style="display:none">
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+/* ============================================================
+   1. CONSTANTS — assets, materials, templates, presets
+============================================================ */
+const CATS = [
+  {id:'Architecture', label:'Architecture', cost:'Fixtures'},
+  {id:'Furniture', label:'Furniture', cost:'Furniture'},
+  {id:'Brand Elements', label:'Brand Elements', cost:'Branding'},
+  {id:'Lighting', label:'Lighting', cost:'Lighting'},
+  {id:'Decorative Objects', label:'Decorative Objects', cost:'Decorative'},
+];
+
+const ASSETS = [
+  {id:'wallPanel', name:'Wall Panel', cat:'Architecture', icon:'rectangle-vertical', cost:260, mat:'matte', color:'#EDE7DC'},
+  {id:'platform', name:'Floor Platform', cat:'Architecture', icon:'layers', cost:340, mat:'matte', color:'#D9D2C4'},
+  {id:'doorFrame', name:'Door Frame', cat:'Architecture', icon:'door-open', cost:420, mat:'wood', color:'#9A7A55'},
+  {id:'windowWall', name:'Glass Window Wall', cat:'Architecture', icon:'blinds', cost:460, mat:'glass', color:'#F2F5F4'},
+  {id:'slatScreen', name:'Slat Partition', cat:'Architecture', icon:'list', cost:380, mat:'wood', color:'#B3946A'},
+  {id:'table', name:'Display Table', cat:'Furniture', icon:'table', cost:480, mat:'wood', color:'#A98A5F'},
+  {id:'chair', name:'Chair', cat:'Furniture', icon:'armchair', cost:190, mat:'wood', color:'#A98A5F'},
+  {id:'shelf', name:'Shelf Unit', cat:'Furniture', icon:'archive', cost:560, mat:'wood', color:'#B3946A'},
+  {id:'counter', name:'Counter', cat:'Furniture', icon:'rectangle-horizontal', cost:840, mat:'matte', color:'#3F3A33'},
+  {id:'sofa', name:'Bench Sofa', cat:'Furniture', icon:'sofa', cost:980, mat:'fabric', color:'#CDBFA5'},
+  {id:'clothingRack', name:'Clothing Rack', cat:'Furniture', icon:'shirt', cost:320, mat:'fabric', color:'#C9B99B'},
+  {id:'logoSignage', name:'Logo Signage', cat:'Brand Elements', icon:'badge', cost:680, mat:'matte', color:'#322E28', branded:true, spawn:[0,1.9,-7.9]},
+  {id:'wallGraphic', name:'Wall Graphic', cat:'Brand Elements', icon:'image', cost:520, mat:'matte', color:'#E9E3D6', branded:true, spawn:[2.5,1,-7.95]},
+  {id:'productDisplay', name:'Product Display', cat:'Brand Elements', icon:'package', cost:720, mat:'concrete', color:'#D8D2C5', branded:true},
+  {id:'brandedPanel', name:'Branded Panel', cat:'Brand Elements', icon:'frame', cost:380, mat:'matte', color:'#3A362F', branded:true, spawn:[2.5,1.3,-7.95]},
+  {id:'typographySign', name:'Typography Signage', cat:'Brand Elements', icon:'type', cost:460, mat:'matte', color:'#322E28', branded:true, spawn:[0,2.8,-7.92]},
+  {id:'spotlight', name:'Spotlight', cat:'Lighting', icon:'flashlight', cost:240, mat:'metal', color:'#B9B5AD', spawn:[0,4.35,3]},
+  {id:'pendant', name:'Pendant Light', cat:'Lighting', icon:'lamp-ceiling', cost:260, mat:'matte', color:'#EFE9DB', spawn:[0,2.3,1.5]},
+  {id:'floorLamp', name:'Floor Lamp', cat:'Lighting', icon:'lamp-floor', cost:210, mat:'matte', color:'#EFE9DB'},
+  {id:'plant', name:'Potted Plant', cat:'Decorative Objects', icon:'sprout', cost:110, mat:'matte', color:'#C4B8A4'},
+  {id:'vase', name:'Vase', cat:'Decorative Objects', icon:'amphora', cost:70, mat:'glossy', color:'#3E3B35'},
+  {id:'plinth', name:'Display Plinth', cat:'Decorative Objects', icon:'box', cost:190, mat:'concrete', color:'#D8D2C5'},
+  {id:'sculpture', name:'Sculpture Piece', cat:'Decorative Objects', icon:'hexagon', cost:420, mat:'metal', color:'#B4925C'},
+  {id:'rug', name:'Round Rug', cat:'Decorative Objects', icon:'circle', cost:260, mat:'fabric', color:'#E7DFCE'},
+];
+const ASSET_BY_ID = Object.fromEntries(ASSETS.map(a=>[a.id,a]));
+
+const TEMPLATES = [
+  {id:'showroom', name:'Luxury Product Showroom', icon:'gem', blurb:'Neutral gallery shell, pedestal composition and focused accent lighting.',
+   env:{floor:'#E5E0D5', floorRough:.3, wall:'#F4F1EA', floorWood:false}, preset:'dramatic', objects:[
+    {n:'Brand Wall Sign', a:'logoSignage', p:[0,1.9,-7.9]},
+    {n:'Showroom Plinth A', a:'plinth', p:[-2.6,0,-0.8], m:'concrete', c:'#DAD5C9'},
+    {n:'Showroom Plinth B', a:'plinth', p:[0.2,0,0.2], m:'concrete', c:'#DAD5C9'},
+    {n:'Showroom Plinth C', a:'plinth', p:[2.8,0,-0.8], m:'concrete', c:'#DAD5C9'},
+    {n:'Stone Vase', a:'vase', p:[-2.6,1.1,-0.8], m:'matte', c:'#8A8172'},
+    {n:'Signature Sculpture', a:'sculpture', p:[0.2,0,0.2], m:'metal', c:'#B4925C'},
+    {n:'Feature Display', a:'productDisplay', p:[4.8,0,-2.6], m:'concrete', c:'#35322C'},
+    {n:'Focus Spot A', a:'spotlight', p:[-3,4.35,2.6]},
+    {n:'Focus Spot B', a:'spotlight', p:[3,4.35,2.6]},
+    {n:'Statement Pendant', a:'pendant', p:[0.2,2.3,0.2], c:'#322E28'},
+    {n:'Lounge Sofa', a:'sofa', p:[-5.2,0,3.2], r:90, m:'fabric', c:'#CDBFA5'},
+    {n:'Lounge Rug', a:'rug', p:[-4.9,0,3.2], m:'fabric', c:'#E7DFCE'},
+    {n:'Side Table', a:'table', p:[-5.2,0,5.3], m:'wood', c:'#8A6B48'},
+    {n:'Ficus Plant', a:'plant', p:[6.9,0,-6.6]},
+    {n:'Vignette Shelf', a:'shelf', p:[-7.82,0,-2.6], r:90, m:'wood', c:'#9A7A55'},
+    {n:'Ceramic Vase', a:'vase', p:[-7.82,0.32,-2.95], m:'glossy', c:'#B8AB97'},
+    {n:'Stoneware Vase', a:'vase', p:[-7.82,0.92,-2.35], m:'matte', c:'#7C7466'},
+  ]},
+  {id:'boutique', name:'Japanese-Inspired Boutique', icon:'leaf', blurb:'Warm timber, slatted screens, low furniture and soft ambient light.',
+   env:{floor:'#C7A273', floorRough:.55, wall:'#F4EEE1', floorWood:true}, preset:'warm', objects:[
+    {n:'Tagline Sign', a:'typographySign', p:[0,2.8,-7.92]},
+    {n:'Slat Screen A', a:'slatScreen', p:[-3.4,0,-2.2], m:'wood', c:'#A98A5F'},
+    {n:'Slat Screen B', a:'slatScreen', p:[3.4,0,-2.2], m:'wood', c:'#A98A5F'},
+    {n:'Low Bench', a:'sofa', p:[-5.6,0,2.8], r:90, m:'fabric', c:'#D8CCB4'},
+    {n:'Display Table', a:'table', p:[0,0,1.6], m:'wood', c:'#9A7A55'},
+    {n:'Bud Vase', a:'vase', p:[-0.3,0.74,1.6], m:'glossy', c:'#3E3B35'},
+    {n:'Ikebana Vase', a:'vase', p:[0.35,0.74,1.45], m:'matte', c:'#B8AB97'},
+    {n:'Service Counter', a:'counter', p:[6.2,0,1.2], r:-90, m:'wood', c:'#8A6B48'},
+    {n:'Paper Pendant A', a:'pendant', p:[-1.8,2.25,0.6]},
+    {n:'Paper Pendant B', a:'pendant', p:[1.8,2.25,0.6]},
+    {n:'Tatami Rug', a:'rug', p:[0,0,3.5], m:'fabric', c:'#E3DAC6'},
+    {n:'Visitor Stool A', a:'chair', p:[-2.7,0,3.9], r:30, m:'wood', c:'#A98A5F'},
+    {n:'Visitor Stool B', a:'chair', p:[2.7,0,3.9], r:-30, m:'wood', c:'#A98A5F'},
+    {n:'Garden Plant', a:'plant', p:[-6.8,0,-6.4]},
+    {n:'Entry Plant', a:'plant', p:[6.9,0,5.7]},
+    {n:'Merch Shelf', a:'shelf', p:[-7.82,0,1.2], r:90, m:'wood', c:'#A98A5F'},
+    {n:'Stone Vase', a:'vase', p:[-7.82,0.92,1.55], m:'matte', c:'#7C7466'},
+    {n:'Display Plinth', a:'plinth', p:[5.2,0,-4.2], m:'matte', c:'#EFE9DC'},
+    {n:'Glaze Vase', a:'vase', p:[5.2,1.1,-4.2], m:'glossy', c:'#4A4438'},
+  ]},
+  {id:'launch', name:'Tech Product Launch Space', icon:'rocket', blurb:'Dark stage, glass walls and directional beam lighting for reveals.',
+   env:{floor:'#2E2C2F', floorRough:.26, wall:'#E9E7E2', floorWood:false}, preset:'dramatic', objects:[
+    {n:'Launch Stage', a:'platform', p:[0,0,-1.6], m:'glossy', c:'#3A373B'},
+    {n:'Center Podium', a:'plinth', p:[0,0.16,-1.6], m:'glossy', c:'#2F2C30'},
+    {n:'Reveal Display A', a:'productDisplay', p:[-3.6,0,-3], m:'metal', c:'#4E4B4F'},
+    {n:'Reveal Display B', a:'productDisplay', p:[3.6,0,-3], m:'metal', c:'#4E4B4F'},
+    {n:'Brand Wall Sign', a:'logoSignage', p:[0,1.9,-7.9]},
+    {n:'Glass Wall A', a:'windowWall', p:[-4.6,0,-7.94]},
+    {n:'Glass Wall B', a:'windowWall', p:[4.6,0,-7.94]},
+    {n:'Beam Spot A', a:'spotlight', p:[-3.2,4.35,2.8]},
+    {n:'Beam Spot B', a:'spotlight', p:[3.2,4.35,2.8]},
+    {n:'Beam Spot C', a:'spotlight', p:[0,4.35,4.2]},
+    {n:'Demo Counter', a:'counter', p:[6.2,0,3.2], r:-90, m:'metal', c:'#57545B'},
+    {n:'Lounge Chair A', a:'chair', p:[3.4,0,4.7], r:200, m:'fabric', c:'#6E675E'},
+    {n:'Lounge Chair B', a:'chair', p:[4.6,0,3.7], r:120, m:'fabric', c:'#6E675E'},
+    {n:'Branded Panel', a:'brandedPanel', p:[-7.95,1.3,-2], r:90},
+    {n:'Snake Plant', a:'plant', p:[7,0,-6.6]},
+  ]},
+  {id:'popup', name:'Fashion Pop-up Store', icon:'shopping-bag', blurb:'Racks, display tables and bold brand graphics in a light retail shell.',
+   env:{floor:'#EDE7DB', floorRough:.75, wall:'#F6F3EC', floorWood:false}, preset:'natural', objects:[
+    {n:'Apparel Rack A', a:'clothingRack', p:[-3.4,0,-2.4], r:90},
+    {n:'Apparel Rack B', a:'clothingRack', p:[3.4,0,-2.4], r:90},
+    {n:'Feature Table', a:'table', p:[-3.4,0,1.6], m:'matte', c:'#E6DFD2'},
+    {n:'Accessory Table', a:'table', p:[3.4,0,1.6], m:'matte', c:'#E6DFD2'},
+    {n:'Checkout Counter', a:'counter', p:[0,0,4.9], r:180, m:'matte', c:'#3B362F'},
+    {n:'Brand Wall Sign', a:'logoSignage', p:[0,1.9,-7.9]},
+    {n:'Graphic Mural A', a:'wallGraphic', p:[-5.2,1,-7.95]},
+    {n:'Graphic Mural B', a:'wallGraphic', p:[5.2,1,-7.95]},
+    {n:'Pendant A', a:'pendant', p:[-3.4,2.25,1.6]},
+    {n:'Pendant B', a:'pendant', p:[3.4,2.25,1.6]},
+    {n:'Fitting Stool', a:'chair', p:[0,0,1.2], m:'fabric', c:'#C9B99B'},
+    {n:'Area Rug', a:'rug', p:[0,0,2.9], m:'fabric', c:'#E8E0CF'},
+    {n:'Monstera Plant', a:'plant', p:[-7.2,0,-6.6]},
+    {n:'Rubber Plant', a:'plant', p:[7.2,0,-6.6]},
+    {n:'Merch Wall Shelf', a:'shelf', p:[-7.82,0,0.8], r:90, m:'wood', c:'#B99B72'},
+    {n:'Arc Floor Lamp', a:'floorLamp', p:[6.6,0,-3.8]},
+  ]},
+  {id:'booth', name:'Creative Exhibition Booth', icon:'presentation', blurb:'Modular wall run, counter and open visitor area for trade shows.',
+   env:{floor:'#E7E2D6', floorRough:.7, wall:'#F3F0E9', floorWood:false}, preset:'natural', objects:[
+    {n:'Booth Wall A', a:'wallPanel', p:[-4,0,-4.1], m:'matte', c:'#EDE8DC'},
+    {n:'Booth Wall B', a:'wallPanel', p:[0,0,-4.1], m:'matte', c:'#EDE8DC'},
+    {n:'Booth Wall C', a:'wallPanel', p:[4,0,-4.1], m:'matte', c:'#EDE8DC'},
+    {n:'Brand Sign', a:'logoSignage', p:[0,1.9,-3.97]},
+    {n:'Story Mural', a:'wallGraphic', p:[-4,0.8,-4.0]},
+    {n:'Branded Panel', a:'brandedPanel', p:[4,1.3,-3.98]},
+    {n:'Meeting Counter', a:'counter', p:[-2.4,0,-1.6], m:'matte', c:'#3F3A33'},
+    {n:'Feature Display', a:'productDisplay', p:[2.6,0,-1.8], m:'concrete', c:'#D8D2C5'},
+    {n:'Pendant A', a:'pendant', p:[-2.4,2.25,-1.6]},
+    {n:'Pendant B', a:'pendant', p:[2.6,2.25,-1.8]},
+    {n:'Visitor Stool A', a:'chair', p:[4.7,0,0.6], r:150, m:'fabric', c:'#CDBFA5'},
+    {n:'Visitor Stool B', a:'chair', p:[5.7,0,1.5], r:210, m:'fabric', c:'#CDBFA5'},
+    {n:'Visitor Rug', a:'rug', p:[0.8,0,1.4], m:'fabric', c:'#E4DCCA'},
+    {n:'Border Screen', a:'slatScreen', p:[7.3,0,-1.2], r:90, m:'wood', c:'#B3946A'},
+    {n:'Ficus Plant', a:'plant', p:[-6.6,0,-3.2]},
+    {n:'Welcome Spot', a:'spotlight', p:[0,4.35,2.2]},
+  ]},
+];
+const TEMPLATE_BY_ID = Object.fromEntries(TEMPLATES.map(t=>[t.id,t]));
+
+const LIGHT_PRESETS = {
+  natural:{label:'Natural Daylight', ambient:.9, main:2.6, color:'#FFF2DF', exposure:1.06, env:.55, keyPos:[6,10,5]},
+  warm:{label:'Warm Boutique', ambient:.55, main:1.7, color:'#FFD9A8', exposure:1.0, env:.42, keyPos:[5,6,4]},
+  dramatic:{label:'Dramatic Showcase', ambient:.2, main:3.6, color:'#FFFFFF', exposure:1.1, env:.34, keyPos:[-5,9,-2]},
+};
+const CURRENCIES = {USD:{rate:1}, EUR:{rate:.92}, GBP:{rate:.79}};
+const MAT_LABELS = {matte:'Matte', glossy:'Glossy', wood:'Wood', metal:'Metal', concrete:'Concrete', glass:'Glass', fabric:'Fabric'};
+
+/* ============================================================
+   2. STATE
+============================================================ */
+const STORE_KEY = 'brand-experience-studio-v1';
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2));
+const clone = o => JSON.parse(JSON.stringify(o));
+
+function defaultState(){
+  return {
+    projectName:'Untitled Experience',
+    templateId:'showroom',
+    brand:{name:'Atelier Nord', tagline:'Objects for calm spaces', logo:null, primary:'#C05B33', secondary:'#8A8172', background:'#EFEBE2'},
+    env:clone(TEMPLATE_BY_ID.showroom.env),
+    lighting:{mode:'day', shadows:true, preset:'dramatic',
+      day:clone(LIGHT_PRESETS.dramatic),
+      evening:{ambient:.42, main:1.5, color:'#FFC98F', exposure:1.0, env:.26, keyPos:[6,4,7]}},
+    objects:[], selection:null, currency:'USD',
+    settings:{grid:true},
+  };
+}
+function objectFromSpec(s){
+  const def = ASSET_BY_ID[s.a];
+  return {id:uid(), name:s.n, asset:s.a, position:[...s.p], rotation:[0, s.r||0, 0],
+    scale:[1,1,1], material:s.m||def.mat, color:s.c||def.color, colorCustom:false,
+    cost:def.cost, visible:true, lightI:1};
+}
+let state = defaultState();
+
+const ui = {tab:'inspect', gizmo:'translate', view:'orbit', search:'', openCats:new Set(CATS.map(c=>c.id)), presenting:false, renaming:null};
+let brandLogoImg = null;
+
+/* ============================================================
+   3. THREE SETUP
+============================================================ */
+const $ = id => document.getElementById(id);
+const refreshIcons = () => { try{ lucide.createIcons(); }catch(e){} };
+const degToRad = THREE.MathUtils.degToRad, radToDeg = THREE.MathUtils.radToDeg;
+
+let renderer, scene, camera, orbit, tc, hemi, key, selHelper;
+const objectsRoot = new THREE.Group();
+const roomGroup = new THREE.Group();
+let grid;
+
+function bootError(msg){ $('boot').classList.add('failed'); $('bootErrMsg').textContent = msg; }
+
+window.addEventListener('error', e => {
+  const b = document.getElementById('boot');
+  if(b && !b.classList.contains('hide'))
+    bootError('Something failed while starting the studio: ' + (e.message || 'unknown error') + ' — open the console (F12) for details.');
+});
+
+try{
+  renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+}catch(err){
+  bootError('This browser could not initialize WebGL, which the 3D viewport requires. Try a recent version of Chrome, Edge, Firefox or Safari with hardware acceleration enabled.');
+  throw err;
+}
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+ $('viewport').appendChild(renderer.domElement);
+renderer.domElement.addEventListener('contextmenu', e=>e.preventDefault());
+
+scene = new THREE.Scene();
+camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, .1, 200);
+camera.position.set(17, 10, 20);
+
+orbit = new OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true; orbit.dampingFactor = .08;
+orbit.target.set(0, 1.5, 0);
+orbit.minDistance = 2.5; orbit.maxDistance = 42;
+orbit.maxPolarAngle = Math.PI/2 - .03;
+orbit.screenSpacePanning = true;
+orbit.addEventListener('start', ()=>{ camTween = null; });
+
+/* --- environment map (authored soft-box studio, no network assets) --- */
+(function makeEnvironment(){
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.BoxGeometry(12,12,12),
+    new THREE.MeshBasicMaterial({color:new THREE.Color(.32,.3,.27), side:THREE.BackSide})));
+  const panel = (w,h,pos,rot,int)=>{
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+      new THREE.MeshBasicMaterial({color:new THREE.Color(int,int*.96,int*.9), side:THREE.DoubleSide}));
+    m.position.set(...pos); m.rotation.set(...rot); env.add(m);
+  };
+  panel(7,7,[0,5.95,0],[Math.PI/2,0,0],5.5);      // ceiling softbox
+  panel(3,8,[-5.95,1,0],[0,Math.PI/2,0],2.2);     // side strip
+  panel(4,3,[0,1.5,-5.95],[0,0,0],1.4);           // back fill
+  panel(2.5,2.5,[4.5,3.5,4.5],[0,-2.35,0],1.8);   // corner kicker
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(env, .05).texture;
+  pmrem.dispose();
+})();
+
+/* --- lights --- */
+hemi = new THREE.HemisphereLight(0xfff6ea, 0xd8cfc0, .9);
+scene.add(hemi);
+key = new THREE.DirectionalLight(0xfff2df, 2.6);
+key.castShadow = true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.left = key.shadow.camera.bottom = -13;
+key.shadow.camera.right = key.shadow.camera.top = 13;
+key.shadow.camera.near = .5; key.shadow.camera.far = 45;
+key.shadow.bias = -0.0003; key.shadow.normalBias = .02;
+scene.add(key);
+
+/* --- room shell --- */
+const roomMats = {
+  floor: new THREE.MeshStandardMaterial({color:0xe5e0d5, roughness:.3}),
+  wall: new THREE.MeshStandardMaterial({color:0xf4f1ea, roughness:.95}),
+  trim: new THREE.MeshStandardMaterial({color:0x2f2b26, roughness:.6}),
+};
+(function buildRoom(){
+  const mk = (g, m, x,y,z) => { const me = new THREE.Mesh(g, m); me.position.set(x,y,z); me.receiveShadow = true; me.castShadow = true; roomGroup.add(me); return me; };
+  const floor = mk(new THREE.BoxGeometry(17.4,.2,17.4), roomMats.floor, 0,-.1,0); floor.castShadow = false;
+  mk(new THREE.BoxGeometry(16.6,5,.3), roomMats.wall, 0,2.5,-8.15);
+  mk(new THREE.BoxGeometry(.3,5,16.6), roomMats.wall, -8.15,2.5,0);
+  mk(new THREE.BoxGeometry(.3,5,16.6), roomMats.wall, 8.15,2.5,0);
+  mk(new THREE.BoxGeometry(16.6,.14,.06), roomMats.trim, 0,.07,-7.97);
+  mk(new THREE.BoxGeometry(.06,.14,16.6), roomMats.trim, -7.97,.07,0);
+  mk(new THREE.BoxGeometry(.06,.14,16.6), roomMats.trim, 7.97,.07,0);
+  grid = new THREE.GridHelper(16, 16, 0xb7ae9c, 0xd9d2c2);
+  grid.material.transparent = true; grid.material.opacity = .45;
+  grid.position.y = .012;
+  roomGroup.add(grid);
+  scene.add(roomGroup);
+  scene.add(objectsRoot);
+})();
+
+/* --- selection helper & gizmo --- */
+selHelper = new THREE.BoxHelper(new THREE.Object3D(), 0xC05B33);
+selHelper.material.depthTest = false; selHelper.material.transparent = true; selHelper.material.opacity = .85;
+selHelper.renderOrder = 999; selHelper.visible = false;
+scene.add(selHelper);
+
+tc = new TransformControls(camera, renderer.domElement);
+tc.setSize(.85);
+scene.add(tc);
+let gizmoLock = 0;
+tc.addEventListener('dragging-changed', e => {
+  orbit.enabled = !e.value;
+  if(!e.value) commit(false);
+});
+tc.addEventListener('mouseDown', ()=>{ gizmoLock = performance.now()+120; });
+tc.addEventListener('objectChange', ()=>{
+  const id = state.selection; if(!id) return;
+  const o = state.objects.find(x=>x.id===id); const n = objectNodes.get(id);
+  if(!o || !n) return;
+  o.position = [+n.position.x.toFixed(3), +n.position.y.toFixed(3), +n.position.z.toFixed(3)];
+  o.rotation = [+radToDeg(n.rotation.x).toFixed(1), +radToDeg(n.rotation.y).toFixed(1), +radToDeg(n.rotation.z).toFixed(1)];
+  o.scale = [+n.scale.x.toFixed(3), +n.scale.y.toFixed(3), +n.scale.z.toFixed(3)];
+  syncInspectorNumbers();
+});
+window.addEventListener('keydown', e=>{ if(e.key==='Shift'){ tc.setTranslationSnap(.25); tc.setRotationSnap(degToRad(15)); tc.setScaleSnap(.1);} });
+window.addEventListener('keyup', e=>{ if(e.key==='Shift'){ tc.setTranslationSnap(null); tc.setRotationSnap(null); tc.setScaleSnap(null);} });
+
+/* ============================================================
+   4. PROCEDURAL TEXTURES & SHARED MATERIALS
+============================================================ */
+function canvasTex(w, h, draw, repeat){
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  draw(cv.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(cv);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  if(repeat) t.repeat.set(repeat, repeat);
+  return t;
+}
+const drawWood = (ctx,w,h)=>{
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
+  for(let i=0;i<110;i++){
+    const x = Math.random()*w, ww = 1+Math.random()*3;
+    ctx.fillStyle = `rgba(115,92,66,${.04+Math.random()*.13})`;
+    ctx.fillRect(x, 0, ww, h);
+  }
+  for(let i=0;i<7;i++){
+    const x = Math.random()*w, y = Math.random()*h;
+    ctx.strokeStyle = `rgba(105,82,58,${.14+Math.random()*.1})`; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.ellipse(x, y, 4+Math.random()*7, 2+Math.random()*3, 0, 0, Math.PI*2); ctx.stroke();
+  }
+};
+const drawConcrete = (ctx,w,h)=>{
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
+  for(let i=0;i<5200;i++){
+    const v = Math.random();
+    ctx.fillStyle = `rgba(${v>.5?255:70},${v>.5?255:66},${v>.5?255:60},${.02+Math.random()*.05})`;
+    ctx.fillRect(Math.random()*w, Math.random()*h, 1.4, 1.4);
+  }
+  for(let i=0;i<9;i++){
+    const x = Math.random()*w, y = Math.random()*h, r = 20+Math.random()*60;
+    const g = ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0,'rgba(110,104,92,.07)'); g.addColorStop(1,'rgba(110,104,92,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+};
+const drawFabric = (ctx,w,h)=>{
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
+  for(let i=0;i<9000;i++){
+    ctx.fillStyle = `rgba(90,80,66,${.015+Math.random()*.04})`;
+    ctx.fillRect(Math.random()*w, Math.random()*h, 1.3, 1.3);
+  }
+};
+const woodTex = canvasTex(512, 512, drawWood);
+const woodFloorTex = canvasTex(512, 512, drawWood, 4);
+const concTex = canvasTex(512, 512, drawConcrete);
+const fabricTex = canvasTex(256, 256, drawFabric, 2);
+
+const pm = o => new THREE.MeshPhysicalMaterial(o);
+const shared = {
+  graphite: pm({color:0x332f29, roughness:.55, metalness:.25}),
+  darkMetal: pm({color:0x2a2724, roughness:.35, metalness:.85}),
+  brass: pm({color:0xb4925c, roughness:.28, metalness:1}),
+  bone: pm({color:0xefeae0, roughness:.85}),
+  paper: pm({color:0xf6f2e8, roughness:.9}),
+  leaf: pm({color:0x5c7350, roughness:.8}),
+  leafDark: pm({color:0x48593f, roughness:.8}),
+  trunk: pm({color:0x6b5741, roughness:.85}),
+  soil: pm({color:0x3a3129, roughness:1}),
+  bulb: new THREE.MeshBasicMaterial({color:0xffe7c2}),
+  paperShade: pm({color:0xf6f2e8, roughness:.9, side:THREE.DoubleSide}),
+};
+const brandMats = {
+  primary: pm({color:0xC05B33, roughness:.42}),
+  secondary: pm({color:0x8A8172, roughness:.6}),
+};
+
+const MAT_PRESETS = {
+  matte:{roughness:.85, metalness:0, color:'#D9D2C4'},
+  glossy:{roughness:.14, metalness:0, clearcoat:1, clearcoatRoughness:.12, color:'#E8E3D8'},
+  wood:{roughness:.65, metalness:0, map:woodTex, color:'#B08A5C'},
+  metal:{roughness:.32, metalness:1, color:'#B9B5AD'},
+  concrete:{roughness:.94, metalness:0, map:concTex, color:'#CDC7BA'},
+  glass:{roughness:.06, metalness:0, transmission:.85, thickness:.4, transparent:true, color:'#F2F4F2'},
+  fabric:{roughness:1, metalness:0, sheen:.55, sheenColor:new THREE.Color(0xfff8ec), map:fabricTex, color:'#C9BDA6'},
+};
+function applyMaterialPreset(mat, presetName, colorIfDefault){
+  const P = MAT_PRESETS[presetName] || MAT_PRESETS.matte;
+  mat.roughness = P.roughness; mat.metalness = P.metalness;
+  mat.clearcoat = P.clearcoat || 0; mat.clearcoatRoughness = P.clearcoatRoughness || 0;
+  mat.transmission = P.transmission || 0; mat.thickness = P.thickness || 0;
+  mat.sheen = P.sheen || 0; mat.sheenColor = P.sheenColor || new THREE.Color(0xffffff);
+  mat.transparent = !!P.transparent; mat.ior = 1.5;
+  mat.map = P.map || null;
+  if(colorIfDefault !== undefined) mat.color.set(colorIfDefault);
+  mat.needsUpdate = true;
+}
+
+/* ============================================================
+   5. BRAND SIGNAGE TEXTURES (canvas-driven, image-based system)
+============================================================ */
+function mixHex(a, b, t){
+  const pa = parseInt(a.slice(1),16), pb = parseInt(b.slice(1),16);
+  const ch = s => [s>>16&255, s>>8&255, s&255];
+  const ca = ch(pa), cb = ch(pb);
+  const m = i => Math.round(ca[i]+(cb[i]-ca[i])*t);
+  return '#' + [m(0),m(1),m(2)].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+function hexLum(hex){
+  const p = parseInt(hex.slice(1),16);
+  return (0.299*(p>>16&255) + 0.587*(p>>8&255) + 0.114*(p&255)) / 255;
+}
+function fitText(ctx, text, maxW, startPx, weight, family){
+  let s = startPx;
+  while(s > 18){
+    ctx.font = `${weight} ${s}px "${family}"`;
+    if(ctx.measureText(text).width <= maxW) break;
+    s -= 4;
+  }
+  return s;
+}
+function makeSignTexture(w, h, drawFn){
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const redraw = () => { drawFn(cv.getContext('2d'), w, h); tex.needsUpdate = true; };
+  redraw();
+  return {tex, redraw};
+}
+function signMaterial(tex){
+  return new THREE.MeshStandardMaterial({map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:.3, roughness:.55});
+}
+function brandText(){ return (state.brand.name || '').trim() || 'Your Brand'; }
+
+function drawLogoFace(ctx, w, h){
+  const b = state.brand;
+  ctx.fillStyle = '#211E1A'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = 'rgba(246,241,231,.14)'; ctx.lineWidth = 2;
+  ctx.strokeRect(26,26,w-52,h-52);
+  if(brandLogoImg && brandLogoImg.complete && brandLogoImg.naturalWidth){
+    const img = brandLogoImg, maxW = w*.58, maxH = h*.56;
+    const s = Math.min(maxW/img.naturalWidth, maxH/img.naturalHeight);
+    const dw = img.naturalWidth*s, dh = img.naturalHeight*s;
+    ctx.drawImage(img, (w-dw)/2, (h-dh)/2 - h*.06, dw, dh);
+    ctx.fillStyle = mixHex(b.primary, '#211E1A', .1);
+    ctx.font = '600 30px "Space Grotesk"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    try{ ctx.letterSpacing = '5px'; }catch(e){}
+    ctx.fillText(brandText().toUpperCase(), w/2, h*.82);
+    try{ ctx.letterSpacing = '0px'; }catch(e){}
+  } else {
+    ctx.fillStyle = b.primary;
+    ctx.beginPath(); ctx.arc(w/2, h*.3, 26, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#F5F1E8'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(w/2, h*.3, 40, 0, Math.PI*2); ctx.stroke();
+    const name = brandText();
+    const size = fitText(ctx, name, w*.76, 108, '600', 'Space Grotesk');
+    ctx.fillStyle = '#F5F1E8';
+    try{ ctx.letterSpacing = Math.round(size*.06)+'px'; }catch(e){}
+    ctx.fillText(name, w/2, h*.62);
+    try{ ctx.letterSpacing = '0px'; }catch(e){}
+  }
+  if((b.tagline||'').trim()){
+    ctx.fillStyle = 'rgba(245,241,232,.55)';
+    const ts = fitText(ctx, b.tagline, w*.62, 30, '500', 'Instrument Sans');
+    try{ ctx.letterSpacing = Math.round(ts*.14)+'px'; }catch(e){}
+    ctx.fillText(b.tagline.toUpperCase(), w/2, brandLogoImg ? h*.9 : h*.78);
+    try{ ctx.letterSpacing = '0px'; }catch(e){}
+  }
+}
+function drawGraphic(ctx, w, h){
+  const b = state.brand;
+  ctx.fillStyle = mixHex(b.secondary, '#F7F2E8', .78);
+  ctx.fillRect(0,0,w,h);
+  const cx = w*.78, cy = h*.96;
+  for(let r=130, i=0; r<700; r+=86, i++){
+    ctx.strokeStyle = i%2 ? mixHex(b.primary, '#F7F2E8', .5) : b.primary;
+    ctx.lineWidth = 30;
+    ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, Math.PI*2); ctx.stroke();
+  }
+  ctx.fillStyle = '#26221C'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  const ns = fitText(ctx, brandText(), w*.5, 44, '600', 'Space Grotesk');
+  try{ ctx.letterSpacing = Math.round(ns*.1)+'px'; }catch(e){}
+  ctx.fillText(brandText().toUpperCase(), 70, h-72);
+  try{ ctx.letterSpacing = '0px'; }catch(e){}
+  ctx.fillStyle = b.primary;
+  ctx.fillRect(70, h-52, 56, 5);
+}
+function drawTypo(ctx, w, h){
+  const b = state.brand;
+  ctx.fillStyle = b.primary; ctx.fillRect(0,0,w,h);
+  const text = ((b.tagline||'').trim() || brandText()).toUpperCase();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const size = fitText(ctx, text, w*.68, 96, '600', 'Space Grotesk');
+  try{ ctx.letterSpacing = Math.round(size*.16)+'px'; }catch(e){}
+  ctx.fillStyle = hexLum(b.primary) > .58 ? '#26221C' : '#FBF8F2';
+  ctx.fillText(text, w/2, h/2);
+  try{ ctx.letterSpacing = '0px'; }catch(e){}
+}
+
+/* ============================================================
+   6. ASSET BUILDERS (procedural, primitives composed honestly)
+============================================================ */
+const mesh = (geo, mat, x=0, y=0, z=0) => {
+  const m = new THREE.Mesh(geo, mat); m.position.set(x,y,z);
+  m.castShadow = true; m.receiveShadow = true; return m;
+};
+const box = (w,h,d,mat,x,y,z) => mesh(new THREE.BoxGeometry(w,h,d), mat, x,y,z);
+const rbox = (w,h,d,r,mat,x,y,z) => mesh(new RoundedBoxGeometry(w,h,d,3,r), mat, x,y,z);
+const cyl = (rt,rb,h,mat,x,y,z,seg=24,open=false) => mesh(new THREE.CylinderGeometry(rt,rb,h,seg,1,open), mat, x,y,z);
+const G = () => { const g = new THREE.Group(); g.userData = {redraws:[], lights:[], disposables:[]}; return g; };
+
+const BUILD = {
+  wallPanel: mm => { const g = G(); g.add(box(3,3,.14, mm, 0,1.5,0)); return g; },
+  platform: mm => { const g = G();
+    g.add(box(2.55,.05,2.55, shared.graphite, 0,.025,0));
+    g.add(box(2.4,.16,2.4, mm, 0,.13,0)); return g; },
+  doorFrame: mm => { const g = G();
+    g.add(box(.95,2.2,.16, mm, -1.025,1.1,0)); g.add(box(.95,2.2,.16, mm, 1.025,1.1,0));
+    g.add(box(3,.5,.16, mm, 0,2.45,0));
+    const pivot = new THREE.Object3D(); pivot.position.set(-.55,0,0); pivot.rotation.y = -.5;
+    pivot.add(rbox(1.08,2.16,.05,.012, mm, .54,1.08,0));
+    pivot.add(mesh(new THREE.SphereGeometry(.03,10,10), shared.brass, 1,1.05,.06));
+    g.add(pivot); return g; },
+  windowWall: mm => { const g = G();
+    g.add(box(3,.12,.12, shared.graphite, 0,.06,0)); g.add(box(3,.12,.12, shared.graphite, 0,2.54,0));
+    g.add(box(.12,2.42,.12, shared.graphite, -1.44,1.33,0)); g.add(box(.12,2.42,.12, shared.graphite, 1.44,1.33,0));
+    g.add(box(.06,2.42,.08, shared.graphite, 0,1.33,0));
+    g.add(box(2.76,2.3,.02, mm, 0,1.33,0)); return g; },
+  slatScreen: mm => { const g = G();
+    g.add(box(3,.09,.07, shared.graphite, 0,.045,0)); g.add(box(3,.09,.07, shared.graphite, 0,2.31,0));
+    for(let i=0;i<11;i++) g.add(box(.09,2.2,.05, mm, -1.36+i*.272, 1.2, 0)); return g; },
+  table: mm => { const g = G();
+    g.add(rbox(1.5,.06,.9,.018, mm, 0,.73,0));
+    [[-.65,-.36],[.65,-.36],[-.65,.36],[.65,.36]].forEach(([x,z])=>g.add(cyl(.024,.024,.7, shared.darkMetal, x,.35,z)));
+    return g; },
+  chair: mm => { const g = G();
+    g.add(rbox(.46,.05,.44,.015, mm, 0,.45,0));
+    const back = rbox(.44,.5,.045,.015, mm, 0,.72,-.2); back.rotation.x = -.1; g.add(back);
+    [[-.18,-.18],[.18,-.18],[-.18,.18],[.18,.18]].forEach(([x,z])=>g.add(cyl(.02,.02,.44, shared.darkMetal, x,.22,z)));
+    return g; },
+  shelf: mm => { const g = G();
+    g.add(box(.05,1.8,.34, mm, -.48,.9,0)); g.add(box(.05,1.8,.34, mm, .48,.9,0));
+    [.3,.9,1.5,1.76].forEach(y=>g.add(box(.92,.045,.32, mm, 0,y,0))); return g; },
+  counter: mm => { const g = G();
+    g.add(rbox(2.2,.95,.68,.02, mm, 0,.48,.02));
+    g.add(box(2.34,.05,.8, shared.graphite, 0,.975,0));
+    g.add(box(2.1,.08,.6, shared.darkMetal, 0,.04,.02)); return g; },
+  sofa: mm => { const g = G();
+    [[-.78,-.32],[.78,-.32],[-.78,.32],[.78,.32]].forEach(([x,z])=>g.add(cyl(.025,.025,.12, shared.brass, x,.06,z)));
+    g.add(rbox(1.8,.3,.78,.04, mm, 0,.27,0));
+    g.add(rbox(.8,.16,.6,.05, mm, -.42,.5,.04)); g.add(rbox(.8,.16,.6,.05, mm, .42,.5,.04));
+    g.add(rbox(1.8,.5,.2,.06, mm, 0,.62,-.31));
+    g.add(rbox(.16,.44,.78,.05, mm, -.82,.52,0)); g.add(rbox(.16,.44,.78,.05, mm, .82,.52,0));
+    return g; },
+  clothingRack: (mm, obj, g_extra) => { const g = G();
+    g.add(cyl(.022,.022,1.7, shared.darkMetal, -.7,.85,0)); g.add(cyl(.022,.022,1.7, shared.darkMetal, .7,.85,0));
+    g.add(box(.4,.05,.1, shared.darkMetal, -.7,.025,0)); g.add(box(.4,.05,.1, shared.darkMetal, .7,.025,0));
+    const bar = cyl(.018,.018,1.4, shared.darkMetal, 0,1.66,0); bar.rotation.z = Math.PI/2; g.add(bar);
+    const mats = [mm, brandMats.primary, shared.paper, mm, shared.bone];
+    for(let i=0;i<5;i++){
+      const gm = rbox(.05,.82,.34,.02, mats[i], -.5+i*.25, 1.2, 0);
+      gm.rotation.y = (i-2)*.07; g.add(gm);
+    }
+    return g; },
+  logoSignage: (mm, obj) => { const g = G();
+    g.add(box(2.2,1.3,.12, mm, 0,.65,0));
+    const s = makeSignTexture(1024, 640, drawLogoFace);
+    g.add(mesh(new THREE.PlaneGeometry(2.02,1.12), signMaterial(s.tex), 0,.65,.062));
+    g.userData.redraws.push(s.redraw); g.userData.disposables.push(s.tex, ...[]);
+    return g; },
+  wallGraphic: (mm, obj) => { const g = G();
+    g.add(box(2.4,2.4,.06, mm, 0,1.2,0));
+    const s = makeSignTexture(1024, 1024, drawGraphic);
+    g.add(mesh(new THREE.PlaneGeometry(2.26,2.26), signMaterial(s.tex), 0,1.2,.032));
+    g.userData.redraws.push(s.redraw); return g; },
+  productDisplay: (mm, obj) => { const g = G();
+    g.add(rbox(.9,.95,.9,.02, mm, 0,.475,0));
+    g.add(box(.98,.04,.98, shared.bone, 0,.975,0));
+    g.add(box(.05,1.15,.05, shared.graphite, .52,1.35,-.42));
+    g.add(box(1.15,.8,.07, shared.graphite, 0,1.62,-.42));
+    const s = makeSignTexture(1024, 640, drawLogoFace);
+    g.add(mesh(new THREE.PlaneGeometry(1.05,.7), signMaterial(s.tex), 0,1.62,-.38));
+    g.userData.redraws.push(s.redraw); return g; },
+  brandedPanel: mm => { const g = G();
+    g.add(box(1.8,1.2,.08, mm, 0,.6,0));
+    g.add(mesh(new THREE.PlaneGeometry(1.66,1.06), brandMats.primary, 0,.6,.045)); return g; },
+  typographySign: (mm, obj) => { const g = G();
+    g.add(box(2.6,.55,.1, mm, 0,.275,0));
+    const s = makeSignTexture(1600, 400, drawTypo);
+    g.add(mesh(new THREE.PlaneGeometry(2.48,.45), signMaterial(s.tex), 0,.275,.052));
+    g.userData.redraws.push(s.redraw); return g; },
+  spotlight: mm => { const g = G();
+    g.add(cyl(.012,.012,.5, shared.darkMetal, 0,.25,0));
+    g.add(box(.18,.04,.18, mm, 0,.5,0));
+    const house = new THREE.Group(); house.rotation.x = 2.92;
+    house.add(cyl(.09,.11,.26, shared.darkMetal, 0,0,0,20));
+    const lens = mesh(new THREE.CircleGeometry(.07,20), shared.bulb, 0,-.14,0); lens.rotation.x = Math.PI/2; house.add(lens);
+    g.add(house);
+    const spot = new THREE.SpotLight(0xffefd8, 380, 14, .55, .5, 2);
+    spot.castShadow = true; spot.shadow.mapSize.set(1024,1024); spot.shadow.bias = -0.0004;
+    const tgt = new THREE.Object3D(); tgt.position.set(0,-4.2,1);
+    g.add(tgt); spot.target = tgt; g.add(spot);
+    spot.userData.base = 380; g.userData.lights.push(spot);
+    return g; },
+  pendant: mm => { const g = G();
+    g.add(cyl(.008,.008,2.6, shared.darkMetal, 0,1.48,0,8));
+    g.add(cyl(.04,.04,.03, shared.darkMetal, 0,2.77,0));
+    const shade = cyl(.05,.3,.32, mm, 0,0,0,28,true); shade.material = mm; shade.material.side = THREE.DoubleSide; g.add(shade);
+    g.add(mesh(new THREE.SphereGeometry(.05,14,10), shared.bulb, 0,-.05,0));
+    const pl = new THREE.PointLight(0xffd9a6, 65, 8, 2); pl.position.set(0,-.15,0);
+    g.add(pl); pl.userData.base = 65; g.userData.lights.push(pl);
+    return g; },
+  floorLamp: mm => { const g = G();
+    g.add(cyl(.16,.18,.03, shared.darkMetal, 0,.015,0));
+    g.add(cyl(.015,.015,1.45, shared.darkMetal, 0,.75,0));
+    const shade = cyl(.16,.21,.3, mm, 0,1.52,0,24,true); mm.side = THREE.DoubleSide; g.add(shade);
+    g.add(mesh(new THREE.SphereGeometry(.05,14,10), shared.bulb, 0,1.45,0));
+    const pl = new THREE.PointLight(0xffdca8, 50, 7, 2); pl.position.set(0,1.42,0);
+    g.add(pl); pl.userData.base = 50; g.userData.lights.push(pl);
+    return g; },
+  plant: mm => { const g = G();
+    g.add(cyl(.17,.13,.3, mm, 0,.15,0));
+    g.add(cyl(.15,.15,.02, shared.soil, 0,.29,0));
+    g.add(cyl(.015,.022,.55, shared.trunk, 0,.55,0,8));
+    const leafG = new THREE.SphereGeometry(1, 10, 8);
+    for(let i=0;i<7;i++){
+      const a = i/7*Math.PI*2, r = .18+((i%3)*.06), y = .62+(i%3)*.22;
+      const leaf = mesh(leafG, i%2?shared.leaf:shared.leafDark, Math.cos(a)*r, y, Math.sin(a)*r);
+      leaf.scale.set(.16,.5,.05); leaf.rotation.set(Math.sin(a)*.5, -a, .7);
+      g.add(leaf);
+    }
+    g.add(mesh(new THREE.SphereGeometry(.07,10,8), shared.leaf, 0,1.18,0));
+    return g; },
+  vase: mm => { const g = G();
+    const pts = [[0.001,0],[.11,.01],[.155,.09],[.12,.26],[.055,.36],[.05,.42],[.09,.5],[.12,.55],[.1,.58]]
+      .map(p=>new THREE.Vector2(p[0],p[1]));
+    g.add(mesh(new THREE.LatheGeometry(pts, 36), mm, 0,0,0));
+    const b1 = cyl(.005,.005,.5, shared.trunk, .03,.8,0,6); b1.rotation.z = .18; g.add(b1);
+    const b2 = cyl(.005,.005,.42, shared.trunk, -.04,.76,.02,6); b2.rotation.z = -.15; b2.rotation.x = .1; g.add(b2);
+    return g; },
+  plinth: mm => { const g = G();
+    g.add(box(.55,1.06,.55, mm, 0,.53,0));
+    g.add(box(.62,.05,.62, shared.bone, 0,1.085,0)); return g; },
+  sculpture: mm => { const g = G();
+    g.add(box(.44,.46,.44, shared.bone, 0,.23,0));
+    g.add(mesh(new THREE.TorusKnotGeometry(.16,.05,140,20), mm, 0,.74,0)); return g; },
+  rug: mm => { const g = G();
+    const r = mesh(new THREE.CylinderGeometry(1.35,1.35,.018,48), mm, 0,.009,0);
+    r.castShadow = false; g.add(r); return g; },
+};
+
+/* ============================================================
+   7. OBJECT MANAGEMENT
+============================================================ */
+const objectNodes = new Map();
+
+function buildNode(obj){
+  const g = new THREE.Group();
+  g.userData = {id:obj.id, redraws:[], disposables:[], lights:[]};
+  const mm = new THREE.MeshPhysicalMaterial();
+  applyMaterialPreset(mm, obj.material, obj.color);
+  g.userData.mainMat = mm; g.userData.disposables.push(mm);
+  const built = (BUILD[obj.asset] || BUILD.wallPanel)(mm, obj);
+  while(built.children.length) g.add(built.children[0]);
+  const bu = built.userData || {};
+  g.userData.redraws = g.userData.redraws.concat(bu.redraws || []);
+  g.userData.lights = g.userData.lights.concat(bu.lights || []);
+  g.userData.disposables = g.userData.disposables.concat(bu.disposables || []);
+  applyTransformToNode(obj, g);
+  g.visible = obj.visible;
+  applyLightIntensity(g, obj.lightI ?? 1);
+  return g;
+}
+function applyTransformToNode(obj, g){
+  const n = g || objectNodes.get(obj.id); if(!n) return;
+  n.position.set(...obj.position);
+  n.rotation.set(degToRad(obj.rotation[0]), degToRad(obj.rotation[1]), degToRad(obj.rotation[2]));
+  n.scale.set(...obj.scale);
+}
+function applyLightIntensity(g, mult){
+  g.userData.lights.forEach(l => { l.intensity = (l.userData.base||10) * mult; });
+}
+function addObject(assetId){
+  const def = ASSET_BY_ID[assetId]; if(!def) return;
+  const spawn = def.spawn || [(Math.random()*2-1)*1.4, 0, 2.4 + Math.random()*1.6];
+  const o = {id:uid(), name:def.name, asset:assetId, position:[...spawn], rotation:[0,0,0], scale:[1,1,1],
+    material:def.mat, color:def.color, colorCustom:false, cost:def.cost, visible:true, lightI:1};
+  state.objects.push(o);
+  const node = buildNode(o); objectsRoot.add(node); objectNodes.set(o.id, node);
+  setSelected(o.id);
+  if(ui.tab !== 'inspect') switchTab('inspect');
+  commit(true);
+}
+function deleteObject(id){
+  const i = state.objects.findIndex(o=>o.id===id); if(i<0) return;
+  const name = state.objects[i].name;
+  if(state.selection === id) setSelected(null);
+  removeNode(id); state.objects.splice(i,1);
+  commit(true); toast(`Removed “${name}” — Ctrl+Z to undo`, 'info');
+}
+function duplicateObject(id){
+  const o = state.objects.find(x=>x.id===id); if(!o) return;
+  const c = clone(o); c.id = uid(); c.name = o.name + ' copy';
+  c.position = [o.position[0]+.55, o.position[1], o.position[2]+.4];
+  state.objects.push(c);
+  const node = buildNode(c); objectsRoot.add(node); objectNodes.set(c.id, node);
+  setSelected(c.id);
+  commit(true); toast(`Duplicated “${o.name}”`, 'success');
+}
+function removeNode(id){
+  const n = objectNodes.get(id); if(!n) return;
+  objectsRoot.remove(n); disposeNode(n); objectNodes.delete(id);
+}
+function disposeNode(g){
+  g.traverse(o=>{
+    if(o.isMesh || o.isLine){ o.geometry && o.geometry.dispose(); }
+    if(o.isLight) o.dispose && o.dispose();
+  });
+  (g.userData.disposables||[]).forEach(d=>d.dispose && d.dispose());
+  (g.userData.redraws||[]);
+}
+function rebuildScene(){
+  tc.detach(); selHelper.visible = false;
+  [...objectNodes.keys()].forEach(removeNode);
+  state.objects.forEach(o=>{ const n = buildNode(o); objectsRoot.add(n); objectNodes.set(o.id, n); });
+  if(state.selection && !objectNodes.has(state.selection)) state.selection = null;
+  syncSelection();
+}
+function redrawSignage(){
+  objectNodes.forEach(g => (g.userData.redraws||[]).forEach(fn=>{ try{fn()}catch(e){} }));
+}
+
+/* --- selection --- */
+function setSelected(id){
+  state.selection = id;
+  if(id && ui.tab !== 'inspect') switchTab('inspect');
+  syncSelection(); renderPanel(); updateListSelection();
+}
+function syncSelection(){
+  const id = state.selection;
+  const node = id ? objectNodes.get(id) : null;
+  if(node && node.visible && !ui.presenting){
+    tc.attach(node);
+    selHelper.setFromObject(node); selHelper.visible = true;
+    selHelper.material.color.set(state.brand.primary);
+  } else {
+    tc.detach(); selHelper.visible = false;
+  }
+}
+
+/* ============================================================
+   8. ENVIRONMENT / LIGHTING / BRAND APPLICATION
+============================================================ */
+function applyEnvironment(){
+  const e = state.env;
+  roomMats.floor.color.set(e.floor); roomMats.floor.roughness = e.floorRough;
+  roomMats.floor.map = e.floorWood ? woodFloorTex : null; roomMats.floor.needsUpdate = true;
+  roomMats.wall.color.set(e.wall);
+  grid.visible = state.settings.grid;
+}
+function applyLighting(){
+  const L = state.lighting, cfg = L[L.mode];
+  hemi.intensity = cfg.ambient;
+  key.intensity = cfg.main; key.color.set(cfg.color);
+  key.position.fromArray(cfg.keyPos);
+  key.castShadow = L.shadows;
+  renderer.toneMappingExposure = cfg.exposure;
+  if('environmentIntensity' in scene) scene.environmentIntensity = cfg.env;
+  const bg = new THREE.Color(state.brand.background);
+  if(L.mode === 'evening') bg.multiplyScalar(.5);
+  scene.background = bg; scene.fog = scene.fog || new THREE.Fog(bg, 20, 60);
+  scene.fog.color.copy(bg);
+  objectNodes.forEach(g => g.traverse(o => { if(o.isLight && o.isSpotLight) o.castShadow = L.shadows; }));
+}
+function applyBrand(){
+  const b = state.brand;
+  const root = document.documentElement;
+  root.style.setProperty('--accent', b.primary);
+  root.style.setProperty('--accent-ink', hexLum(b.primary) > .58 ? '#26221C' : '#FBF8F2');
+  brandMats.primary.color.set(b.primary);
+  brandMats.secondary.color.set(b.secondary);
+  selHelper.material.color.set(b.primary);
+  const cap = $('caption');
+  cap.querySelector('.cap-name').textContent = brandText();
+  cap.querySelector('.cap-tag').textContent = (b.tagline||'').trim() || state.projectName;
+  scheduleSignRedraw();
+  applyLighting(); // evening background derives from brand background
+}
+let signRedrawTimer = null;
+function scheduleSignRedraw(){
+  clearTimeout(signRedrawTimer);
+  signRedrawTimer = setTimeout(redrawSignage, 60);
+}
+
+/* ============================================================
+   9. HISTORY (undo / redo)
+============================================================ */
+let history = [], histIdx = -1;
+const snapshotState = () => ({objects:state.objects, env:state.env, lighting:state.lighting, templateId:state.templateId});
+function pushHistory(){
+  const snap = JSON.stringify(snapshotState());
+  if(history[histIdx] === snap) return;
+  history = history.slice(0, histIdx+1);
+  history.push(snap);
+  if(history.length > 60) history.shift();
+  histIdx = history.length - 1;
+  updateHistoryUI();
+}
+function commit(structural){
+  pushHistory(); markDirty();
+  if(structural){ renderSceneList(); renderCost(); updateStatusbar(); }
+}
+function restore(snapJson){
+  const d = JSON.parse(snapJson);
+  state.objects = d.objects; state.env = d.env; state.lighting = d.lighting; state.templateId = d.templateId;
+  applyEnvironment(); applyLighting(); rebuildScene();
+  renderSceneList(); renderCost(); renderPanel(); updateStatusbar(); updateModeLabel();
+  markDirty();
+}
+function undo(){ if(histIdx>0){ histIdx--; restore(history[histIdx]); updateHistoryUI(); } }
+function redo(){ if(histIdx<history.length-1){ histIdx++; restore(history[histIdx]); updateHistoryUI(); } }
+function updateHistoryUI(){
+  $('btnUndo').disabled = histIdx <= 0;
+  $('btnRedo').disabled = histIdx >= history.length-1;
+}
+
+/* ============================================================
+   10. PERSISTENCE
+============================================================ */
+let dirtyTimer = null;
+function markDirty(){
+  $('saveStatus').dataset.state = 'saving';
+  $('saveStatus').querySelector('span').textContent = 'Saving…';
+  clearTimeout(dirtyTimer);
+  dirtyTimer = setTimeout(()=>{
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify({v:1, state})); }catch(e){}
+    $('saveStatus').dataset.state = 'saved';
+    $('saveStatus').querySelector('span').textContent = 'Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }, 700);
+}
+function tryRestore(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY); if(!raw) return false;
+    const data = JSON.parse(raw);
+    if(!data || data.v !== 1 || !data.state || !Array.isArray(data.state.objects)) return false;
+    state = Object.assign(defaultState(), data.state);
+    state.brand = Object.assign(defaultState().brand, data.state.brand||{});
+    state.lighting = Object.assign(defaultState().lighting, data.state.lighting||{});
+    state.settings = Object.assign({grid:true}, data.state.settings||{});
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ============================================================
+   11. CAMERA
+============================================================ */
+const VIEWS = {
+  orbit:{pos:[9.5,6.2,11.5], target:[0,1.5,0], label:'Perspective'},
+  front:{pos:[0,3.2,15.5], target:[0,2.2,-1], label:'Front'},
+  top:{pos:[0,21,.05], target:[0,0,0], label:'Top'},
+  present:{pos:[6.8,2.7,8.8], target:[0,1.7,-.6], label:'Presentation'},
+};
+let camTween = null;
+const easeIO = t => t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+function tweenCamera(pos, target, dur=900){
+  camTween = {t0:performance.now(), dur,
+    fp:camera.position.clone(), ft:orbit.target.clone(),
+    tp:new THREE.Vector3(...pos), tt:new THREE.Vector3(...target)};
+}
+function stepTween(now){
+  if(!camTween) return;
+  const k = Math.min(1, (now-camTween.t0)/camTween.dur), e = easeIO(k);
+  camera.position.lerpVectors(camTween.fp, camTween.tp, e);
+  orbit.target.lerpVectors(camTween.ft, camTween.tt, e);
+  if(k>=1) camTween = null;
+}
+function setView(v){
+  if(v === 'present'){ setPresenting(true); return; }
+  ui.view = v;
+  tweenCamera(VIEWS[v].pos, VIEWS[v].target);
+  updateToolbarUI(); updateStatusbar();
+}
+function focusSelected(){
+  const node = state.selection ? objectNodes.get(state.selection) : null;
+  if(!node){ toast('Select an object first, then press F to focus', 'info'); return; }
+  const b = new THREE.Box3().setFromObject(node);
+  const s = b.getBoundingSphere(new THREE.Sphere());
+  const dist = Math.max(2, s.radius / Math.tan(degToRad(camera.fov/2)) * 1.5);
+  const dir = camera.position.clone().sub(orbit.target).normalize();
+  const pos = s.center.clone().add(dir.multiplyScalar(dist));
+  tweenCamera(pos.toArray(), s.center.toArray(), 750);
+}
+
+/* ============================================================
+   12. PICKING & HOVER
+============================================================ */
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+let downPos = null, hoverPending = null, hoverId = null;
+
+function pickAt(cx, cy){
+  ndc.x = (cx/innerWidth)*2-1; ndc.y = -(cy/innerHeight)*2+1;
+  raycaster.setFromCamera(ndc, camera);
+  const hits = raycaster.intersectObjects(objectsRoot.children, true);
+  for(const h of hits){
+    let n = h.object;
+    while(n && n.parent !== objectsRoot) n = n.parent;
+    if(n && n.userData.id) return n.userData.id;
+  }
+  return null;
+}
+const canvas = renderer.domElement;
+canvas.addEventListener('pointerdown', e=>{ if(e.button===0) downPos = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', e=>{
+  if(e.button!==0 || !downPos) return;
+  const moved = Math.hypot(e.clientX-downPos[0], e.clientY-downPos[1]);
+  downPos = null;
+  if(moved > 5 || ui.presenting || performance.now() < gizmoLock) return;
+  setSelected(pickAt(e.clientX, e.clientY));
+});
+canvas.addEventListener('pointermove', e=>{ hoverPending = [e.clientX, e.clientY]; });
+
+function doHover(){
+  if(!hoverPending) return;
+  const [x,y] = hoverPending; hoverPending = null;
+  if(ui.presenting || tc.dragging || downPos){ hoverId = null; $('hoverTag').style.display = 'none'; canvas.style.cursor = ''; return; }
+  const id = pickAt(x,y);
+  const tag = $('hoverTag');
+  if(id){
+    const o = state.objects.find(ob=>ob.id===id);
+    canvas.style.cursor = 'pointer';
+    tag.textContent = o ? o.name : '';
+    tag.style.display = 'block';
+    tag.style.left = (x+14)+'px'; tag.style.top = (y+16)+'px';
+  } else {
+    canvas.style.cursor = ''; tag.style.display = 'none';
+  }
+  hoverId = id;
+}
+
+/* ============================================================
+   13. UI — toasts, tooltips, panels
+============================================================ */
+function toast(msg, type='info'){
+  const icons = {success:'check', error:'x', info:'info'};
+  const el = document.createElement('div');
+  el.className = 'toast '+type;
+  el.innerHTML = `<i data-lucide="${icons[type]}"></i><span>${msg}</span>`;
+  $('toasts').appendChild(el); refreshIcons();
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 300); }, 3400);
+  while($('toasts').children.length > 4) $('toasts').firstChild.remove();
+}
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtMoney = usd => new Intl.NumberFormat(undefined,{style:'currency', currency:state.currency, maximumFractionDigits:0}).format(usd * CURRENCIES[state.currency].rate);
+
+function updateModeLabel(){
+  const t = TEMPLATE_BY_ID[state.templateId];
+  $('modeLabel').textContent = ui.presenting ? 'Presentation' : `Editing · ${t ? t.name : 'Custom'}`;
+}
+function updateStatusbar(){
+  $('statusbar').textContent = `${state.objects.length} objects · ${VIEWS[ui.view].label} view · Shift while dragging = snap`;
+}
+function updateToolbarUI(){
+  document.querySelectorAll('#toolbar [data-act]').forEach(b=>{
+    const a = b.dataset.act;
+    if(a==='translate'||a==='rotate'||a==='scale') b.classList.toggle('active', ui.gizmo===a);
+    if(a==='grid') b.classList.toggle('active', state.settings.grid);
+  });
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('active', b.dataset.view===ui.view));
+}
+
+/* ---------- Library ---------- */
+function renderLibrary(){
+  const q = ui.search.trim().toLowerCase();
+  const html = CATS.map(c=>{
+    const items = ASSETS.filter(a=>a.cat===c.id && (!q || a.name.toLowerCase().includes(q)));
+    if(!items.length) return '';
+    const open = ui.openCats.has(c.id);
+    return `<section>
+      <button class="lib-head" data-cat="${c.id}"><i data-lucide="${open?'chevron-down':'chevron-right'}"></i><span>${c.label}</span><em>${items.length}</em></button>
+      ${open ? `<div>${items.map(a=>`
+        <button class="lib-item" data-asset="${a.id}" data-tip="Add to scene">
+          <span class="lib-ico"><i data-lucide="${a.icon}"></i></span>
+          <span class="lib-txt"><b>${a.name}</b><small>${a.cat}</small></span>
+          <span class="lib-cost">${fmtMoney(a.cost)}</span>
+          <span class="lib-add"><i data-lucide="plus"></i></span>
+        </button>`).join('')}</div>` : ''}
+    </section>`;
+  }).join('');
+  $('libraryList').innerHTML = html || `<div class="lib-empty"><i data-lucide="search-x"></i><p>No assets match “${escapeHtml(ui.search)}”.<br>Try a different term.</p></div>`;
+  refreshIcons();
+}
+
+/* ---------- Right panel ---------- */
+function switchTab(tab){
+  ui.tab = tab;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  renderPanel();
+}
+function renderPanel(){
+  const body = $('panelBody');
+  if(ui.tab==='inspect') body.innerHTML = inspectorHTML();
+  else if(ui.tab==='scene') body.innerHTML = sceneHTML();
+  else if(ui.tab==='brand') body.innerHTML = brandHTML();
+  else if(ui.tab==='light') body.innerHTML = lightHTML();
+  else if(ui.tab==='cost') body.innerHTML = costHTML();
+  refreshIcons();
+}
+const sel = () => state.objects.find(o=>o.id===state.selection) || null;
+
+function numInp(prop, val, step, axis){
+  return `<span class="axwrap"><span class="ax ax-${axis}">${axis.toUpperCase()}</span><input class="num" type="number" step="${step}" data-prop="${prop}" value="${val}"></span>`;
+}
+function inspectorHTML(){
+  const o = sel();
+  if(!o) return `<div class="empty-state">
+    <i data-lucide="mouse-pointer-click"></i>
+    <p>Select an object to edit its properties.</p>
+    <small>Click any object in the viewport, or pick one from the Scene list.</small>
+  </div>`;
+  const def = ASSET_BY_ID[o.asset];
+  const p = o.position, r = o.rotation, s = o.scale;
+  return `
+  <div class="obj-head">
+    <input class="inp" data-prop="name" value="${escapeHtml(o.name)}" spellcheck="false" style="flex:1">
+    <span class="badge">${def.cat}</span>
+  </div>
+  ${def.branded ? `<div class="note" style="margin-bottom:16px">Branded element — its signage surface follows the <b>Brand tab</b> colors and logo.</div>` : ''}
+  <div class="sec"><div class="sec-t">Transform</div>
+    <div class="trow"><span class="tlab">Position</span>${numInp('px',p[0].toFixed(2),.1,'x')}${numInp('py',p[1].toFixed(2),.1,'y')}${numInp('pz',p[2].toFixed(2),.1,'z')}</div>
+    <div class="trow"><span class="tlab">Rotation</span>${numInp('rx',r[0].toFixed(1),5,'x')}${numInp('ry',r[1].toFixed(1),5,'y')}${numInp('rz',r[2].toFixed(1),5,'z')}</div>
+    <div class="trow"><span class="tlab">Scale</span>${numInp('sx',s[0].toFixed(2),.05,'x')}${numInp('sy',s[1].toFixed(2),.05,'y')}${numInp('sz',s[2].toFixed(2),.05,'z')}</div>
+  </div>
+  <div class="sec"><div class="sec-t">Appearance</div>
+    <label class="field"><span>Material</span>
+      <select class="inp" data-prop="material">${Object.entries(MAT_LABELS).map(([k,v])=>`<option value="${k}" ${k===o.material?'selected':''}>${v}</option>`).join('')}</select>
+    </label>
+    <label class="field"><span>Base color</span>
+      <div class="color-row"><input type="color" data-prop="color" value="${o.color}"><span class="hex" data-hex>${o.color.toUpperCase()}</span></div>
+    </label>
+    <div class="srow"><div class="sl"><span>Roughness</span><b>${o.rough ?? MAT_PRESETS[o.material].roughness}</b></div>
+      <input type="range" min="0" max="1" step="0.01" data-prop="rough" value="${o.rough ?? MAT_PRESETS[o.material].roughness}"></div>
+    <div class="srow"><div class="sl"><span>Metalness</span><b>${o.metal ?? MAT_PRESETS[o.material].metalness}</b></div>
+      <input type="range" min="0" max="1" step="0.01" data-prop="metal" value="${o.metal ?? MAT_PRESETS[o.material].metalness}"></div>
+    ${def.cat==='Lighting' ? `<div class="srow"><div class="sl"><span>Light intensity</span><b>${(o.lightI??1).toFixed(2)}×</b></div>
+      <input type="range" min="0" max="2" step="0.05" data-prop="lightI" value="${o.lightI??1}"></div>` : ''}
+  </div>
+  <div class="sec"><div class="sec-t">Object</div>
+    <label class="field"><span>Estimated cost (USD)</span><input class="inp" type="number" step="10" min="0" data-prop="cost" value="${o.cost}"></label>
+    <div class="row" style="margin-bottom:12px"><span style="font-size:11.5px;color:var(--ink2);flex:1">Visible in scene</span>
+      <label class="switch"><input type="checkbox" data-prop="visible" ${o.visible?'checked':''}><i></i></label></div>
+    <div class="act-row">
+      <button class="btn" data-act="focus"><i data-lucide="focus"></i>Focus</button>
+      <button class="btn" data-act="dup"><i data-lucide="copy"></i>Duplicate</button>
+      <button class="btn" data-act="del" style="color:#A2401F"><i data-lucide="trash-2"></i>Delete</button>
+    </div>
+  </div>`;
+}
+function syncInspectorNumbers(){
+  if(ui.tab !== 'inspect') return;
+  const o = sel(); if(!o) return;
+  const map = {px:o.position[0],py:o.position[1],pz:o.position[2],rx:o.rotation[0],ry:o.rotation[1],rz:o.rotation[2],sx:o.scale[0],sy:o.scale[1],sz:o.scale[2]};
+  for(const [k,v] of Object.entries(map)){
+    const el = $('panelBody').querySelector(`[data-prop="${k}"]`);
+    if(el && document.activeElement !== el) el.value = (+v).toFixed(2);
+  }
+}
+function sceneHTML(){
+  const rows = state.objects.map(o=>{
+    const def = ASSET_BY_ID[o.asset];
+    if(ui.renaming === o.id) return `<div class="scene-row selected"><span class="ico"><i data-lucide="${def.icon}"></i></span><span class="nm"><input value="${escapeHtml(o.name)}" data-rename="${o.id}" spellcheck="false"></span></div>`;
+    return `<button class="scene-row ${o.id===state.selection?'selected':''}" data-sel="${o.id}">
+      <span class="ico"><i data-lucide="${def.icon}"></i></span>
+      <span class="nm"><b>${escapeHtml(o.name)}</b><small>${def.name}</small></span>
+      <span class="icon-btn sm ${o.visible?'':'eye-off-row'}" data-eye="${o.id}" data-tip="${o.visible?'Hide':'Show'}"><i data-lucide="${o.visible?'eye':'eye-off'}"></i></span>
+      <span class="icon-btn sm danger" data-del="${o.id}" data-tip="Delete"><i data-lucide="trash-2"></i></span>
+    </button>`;
+  }).join('');
+  return `
+  <div class="sec"><div class="sec-t">Objects · ${state.objects.length}</div>
+    ${rows || `<div class="empty-state" style="padding:28px 10px"><i data-lucide="box"></i><p>The scene is empty.</p><small>Add assets from the library, or apply a template.</small></div>`}
+  </div>
+  <div class="sec"><div class="sec-t">Scene actions</div>
+    <div class="act-row">
+      <button class="btn" data-act="apply-template"><i data-lucide="layout-template"></i>Browse templates</button>
+      <button class="btn" data-act="clear-objects" style="color:#A2401F"><i data-lucide="eraser"></i>Clear objects</button>
+    </div>
+    <div class="note" style="margin-top:12px">Clearing objects keeps the room shell and lighting — undo with Ctrl+Z. <b>Reset project</b> (below) wipes everything, including brand settings.</div>
+    <div style="margin-top:12px"><button class="btn ghost" data-act="reset-project" style="color:#A2401F"><i data-lucide="rotate-ccw"></i>Reset entire project</button></div>
+  </div>`;
+}
+function updateListSelection(){
+  document.querySelectorAll('#panelBody [data-sel]').forEach(el=>el.classList.toggle('selected', el.dataset.sel === state.selection));
+}
+function brandHTML(){
+  const b = state.brand;
+  const primSw = ['#C05B33','#3E5F45','#35405F','#C2913A','#7A3030','#57405E','#7C8B6F','#A5583F'];
+  const secSw = ['#8A8172','#B8AB97','#6E675E','#4A5568','#9C8567','#5F6B5A'];
+  return `
+  <div class="sec"><div class="sec-t">Identity</div>
+    <label class="field"><span>Brand name</span><input class="inp" data-brand="name" value="${escapeHtml(b.name)}" spellcheck="false"></label>
+    <label class="field"><span>Tagline</span><input class="inp" data-brand="tagline" value="${escapeHtml(b.tagline)}" spellcheck="false"></label>
+  </div>
+  <div class="sec"><div class="sec-t">Logo</div>
+    ${b.logo ? `<div class="logo-preview"><img src="${b.logo}" alt="logo"><div style="flex:1"><b style="font-size:12px">Logo loaded</b><div style="font-size:10.5px;color:var(--mut);margin-top:2px">Applied to signage & displays</div></div><button class="icon-btn sm danger" data-act="logo-remove" data-tip="Remove logo"><i data-lucide="trash-2"></i></button></div>`
+      : `<button class="drop" data-act="logo-upload"><i data-lucide="upload"></i><br>Upload a logo image<br><span style="font-size:10.5px">PNG or JPG, up to 2.5 MB — shown on signage</span></button>`}
+  </div>
+  <div class="sec"><div class="sec-t">Colors</div>
+    <label class="field"><span>Primary brand color</span>
+      <div class="color-row"><input type="color" data-brand="primary" value="${b.primary}"><span class="hex" id="hexPrimary">${b.primary.toUpperCase()}</span></div>
+      <div class="swatches">${primSw.map(c=>`<button class="swatch" style="background:${c}" data-swatch="primary" data-color="${c}" data-tip="${c}"></button>`).join('')}</div>
+    </label>
+    <label class="field"><span>Secondary brand color</span>
+      <div class="color-row"><input type="color" data-brand="secondary" value="${b.secondary}"><span class="hex" id="hexSecondary">${b.secondary.toUpperCase()}</span></div>
+      <div class="swatches">${secSw.map(c=>`<button class="swatch" style="background:${c}" data-swatch="secondary" data-color="${c}" data-tip="${c}"></button>`).join('')}</div>
+    </label>
+    <label class="field"><span>Scene background</span>
+      <div class="color-row"><input type="color" data-brand="background" value="${b.background}"><span class="hex" id="hexBackground">${b.background.toUpperCase()}</span></div>
+    </label>
+  </div>
+  <div class="note">Primary color drives signage, branded panels, the accent garment on racks and the interface accent. Other objects keep their own materials.</div>`;
+}
+function lightHTML(){
+  const L = state.lighting, cfg = L[L.mode];
+  return `
+  <div class="sec"><div class="sec-t">Mode</div>
+    <div class="seg" style="width:100%; display:flex">
+      <button style="flex:1" data-lmode="day" class="${L.mode==='day'?'active':''}"><i data-lucide="sun" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px"></i>Day</button>
+      <button style="flex:1" data-lmode="evening" class="${L.mode==='evening'?'active':''}"><i data-lucide="moon" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px"></i>Evening</button>
+    </div>
+    <div class="note" style="margin-top:10px">Each mode keeps its own light settings — tune them separately.</div>
+  </div>
+  <div class="sec"><div class="sec-t">Lighting · ${L.mode}</div>
+    <div class="srow"><div class="sl"><span>Ambient intensity</span><b>${cfg.ambient.toFixed(2)}</b></div><input type="range" min="0" max="2" step="0.01" data-light="ambient" value="${cfg.ambient}"></div>
+    <div class="srow"><div class="sl"><span>Main light intensity</span><b>${cfg.main.toFixed(2)}</b></div><input type="range" min="0" max="6" step="0.05" data-light="main" value="${cfg.main}"></div>
+    <div class="srow"><div class="sl"><span>Exposure</span><b>${cfg.exposure.toFixed(2)}</b></div><input type="range" min="0.5" max="1.8" step="0.01" data-light="exposure" value="${cfg.exposure}"></div>
+    <label class="field"><span>Light color</span><div class="color-row"><input type="color" data-light="color" value="${cfg.color}"><span class="hex">${cfg.color.toUpperCase()}</span></div></label>
+    <div class="row" style="margin-top:8px"><span style="font-size:11.5px;color:var(--ink2);flex:1">Cast shadows</span>
+      <label class="switch"><input type="checkbox" data-light="shadows" ${L.shadows?'checked':''}><i></i></label></div>
+  </div>
+  <div class="sec"><div class="sec-t">Moods</div>
+    <div class="row" style="flex-wrap:wrap;gap:6px">
+      ${Object.entries(LIGHT_PRESETS).map(([k,p])=>`<button class="chip ${L.preset===k?'active':''}" data-preset="${k}">${p.label}</button>`).join('')}
+    </div>
+  </div>
+  <div class="sec"><div class="sec-t">Environment</div>
+    <label class="field"><span>Floor color</span><div class="color-row"><input type="color" data-env="floor" value="${state.env.floor}"><span class="hex">${state.env.floor.toUpperCase()}</span></div></label>
+    <label class="field"><span>Wall color</span><div class="color-row"><input type="color" data-env="wall" value="${state.env.wall}"><span class="hex">${state.env.wall.toUpperCase()}</span></div></label>
+    <div class="row" style="margin:8px 0"><span style="font-size:11.5px;color:var(--ink2);flex:1">Timber floor texture</span>
+      <label class="switch"><input type="checkbox" data-env="floorWood" ${state.env.floorWood?'checked':''}><i></i></label></div>
+    <div class="row"><span style="font-size:11.5px;color:var(--ink2);flex:1">Architectural grid</span>
+      <label class="switch"><input type="checkbox" data-env="grid" ${state.settings.grid?'checked':''}><i></i></label></div>
+  </div>`;
+}
+function costHTML(){
+  const rows = CATS.map(c=>{
+    const items = state.objects.filter(o=>ASSET_BY_ID[o.asset]?.cat === c.id);
+    const sub = items.reduce((s,o)=>s+(+o.cost||0), 0);
+    return `<div class="cost-row"><span class="cn">${c.cost}<em>${items.length} item${items.length===1?'':'s'}</em></span><span class="cv" style="color:${sub?'var(--ink)':'var(--mut)'}">${sub ? fmtMoney(sub) : '—'}</span></div>`;
+  }).join('');
+  const total = state.objects.reduce((s,o)=>s+(+o.cost||0), 0);
+  return `
+  <div class="sec"><div class="sec-t">Estimate by category</div>${rows}</div>
+  <div class="cost-total"><span style="font-size:12px;color:var(--ink2)">Estimated total</span><b>${fmtMoney(total)}</b></div>
+  <label class="field" style="margin-top:12px"><span>Currency</span>
+    <select class="inp" data-currency>${Object.keys(CURRENCIES).map(c=>`<option ${c===state.currency?'selected':''}>${c}</option>`).join('')}</select>
+  </label>
+  <div class="note">Currency conversion uses fixed illustrative rates (1 USD = ${CURRENCIES.EUR.rate} EUR / ${CURRENCIES.GBP.rate} GBP) — not live market rates.<br><br>All figures are rough planning estimates based on generic production assumptions. They are not vendor quotations; confirm pricing with fabricators and suppliers.</div>`;
+}
+function renderSceneList(){ if(ui.tab === 'scene') renderPanel(); }
+function renderCost(){ if(ui.tab === 'cost') renderPanel(); }
+
+/* ============================================================
+   14. TEMPLATES
+============================================================ */
+function applyTemplate(id){
+  const t = TEMPLATE_BY_ID[id]; if(!t) return;
+  state.templateId = id;
+  state.env = clone(t.env);
+  state.lighting.preset = t.preset;
+  Object.assign(state.lighting[state.lighting.mode], LIGHT_PRESETS[t.preset]);
+  state.objects = t.objects.map(objectFromSpec);
+  state.selection = null; ui.renaming = null;
+  applyEnvironment(); applyLighting(); rebuildScene();
+  commit(true); updateModeLabel(); setView('orbit');
+  renderLibrary();
+  toast(`Template applied — ${t.name}. Ctrl+Z restores the previous scene.`, 'success');
+}
+function tplThumb(t){
+  const e = t.env;
+  return `<div class="tpl-thumb" style="background:${e.wall}">
+    <span class="b1" style="left:12px;width:14px;height:26px;background:${mixHex(e.floor,'#000000',.15)}"></span>
+    <span class="b2" style="left:32px;width:14px;height:38px;background:${mixHex(e.wall,'#000000',.2)}"></span>
+    <span class="b3" style="left:52px;width:14px;height:20px;background:${e.floor}"></span>
+    <span class="a" style="background:${state.brand.primary}"></span>
+    <span style="position:absolute;left:0;right:0;bottom:0;height:12px;background:${e.floor}"></span>
+  </div>`;
+}
+function openTemplatesModal(){
+  openModal(`
+    <div class="m-head"><i data-lucide="layout-template"></i><h3>Environment templates</h3><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="m-body">
+      ${TEMPLATES.map(t=>`
+        <button class="tpl-row ${t.id===state.templateId?'active':''}" data-template="${t.id}">
+          ${tplThumb(t)}
+          <div class="tpl-info"><b>${t.name}</b><p>${t.blurb}</p></div>
+          <span class="tpl-tag">${t.objects.length} objects</span>
+        </button>`).join('')}
+      <div class="note">Applying a template replaces the current object layout and environment colors. Your brand settings stay untouched, and the change is undoable.</div>
+    </div>`);
+  $('modalCard').querySelectorAll('[data-template]').forEach(b=>{
+    b.addEventListener('click', ()=>{ applyTemplate(b.dataset.template); closeModal(); });
+  });
+}
+function openShortcutsModal(){
+  const rows = [
+    ['W / E / R','Move · Rotate · Scale gizmo'], ['F','Focus on selection'],
+    ['G','Toggle grid'], ['Shift (hold)','Snap while transforming'],
+    ['Del / Backspace','Delete selection'], ['Ctrl / Cmd + D','Duplicate selection'],
+    ['Ctrl / Cmd + Z','Undo'], ['Ctrl / Cmd + Shift + Z','Redo'],
+    ['Esc','Deselect · close · exit presentation'], ['Right-drag','Pan camera'],
+    ['Scroll','Zoom'], ['Drag','Orbit camera'],
+  ];
+  openModal(`
+    <div class="m-head"><i data-lucide="keyboard"></i><h3>Keyboard shortcuts</h3><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="m-body"><div class="kbd-grid">
+      ${rows.map(r=>`<div class="kbd-row"><span>${r[1]}</span><kbd>${r[0]}</kbd></div>`).join('')}
+    </div></div>`);
+}
+function confirmModal(title, msg, okLabel, cb){
+  openModal(`
+    <div class="m-head"><i data-lucide="triangle-alert"></i><h3>${title}</h3><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="m-body"><p style="font-size:13px;line-height:1.6;color:var(--ink2)">${msg}</p></div>
+    <div class="m-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="confirmOk">${okLabel}</button></div>`);
+  $('confirmOk').addEventListener('click', ()=>{ closeModal(); cb(); });
+}
+
+/* ============================================================
+   15. MODAL SYSTEM
+============================================================ */
+function openModal(html){
+  $('modalCard').innerHTML = html;
+  $('modalBackdrop').classList.add('show');
+  refreshIcons();
+  $('modalCard').querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', closeModal));
+}
+function closeModal(){ $('modalBackdrop').classList.remove('show'); }
+ $('modalBackdrop').addEventListener('click', e=>{ if(e.target === $('modalBackdrop')) closeModal(); });
+
+/* ============================================================
+   16. EXPORT
+============================================================ */
+function captureViewport(scale=2){
+  const pr = renderer.getPixelRatio();
+  const tcWas = tc.visible, helperWas = selHelper.visible;
+  selHelper.visible = false; tc.visible = false;
+  renderer.setPixelRatio(Math.min(pr*scale, 4));
+  renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL('image/png');
+  renderer.setPixelRatio(pr);
+  tc.visible = tcWas; selHelper.visible = helperWas;
+  renderer.render(scene, camera);
+  return url;
+}
+function download(url, name){
+  const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+const slug = s => (s||'project').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'project';
+
+async function composeConceptSheet(){
+  const url = captureViewport(2);
+  const img = await new Promise((res, rej)=>{ const i = new Image(); i.onload=()=>res(i); i.onerror=rej; i.src = url; });
+  const W = 1500, H = 2100, M = 90;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const b = state.brand, t = TEMPLATE_BY_ID[state.templateId];
+  const total = state.objects.reduce((s,o)=>s+(+o.cost||0), 0);
+  ctx.fillStyle = '#F7F3EB'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = b.primary; ctx.fillRect(0,0,W,12);
+  // header
+  ctx.fillStyle = b.primary; ctx.beginPath(); ctx.arc(M+16, M+26, 14, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#26221C'; ctx.lineWidth = 4; ctx.strokeRect(M+4, M+12, 22, 22);
+  ctx.fillStyle = '#98907F'; ctx.font = '500 22px "Space Grotesk"'; ctx.textBaseline = 'middle';
+  try{ ctx.letterSpacing = '5px'; }catch(e){}
+  ctx.textAlign = 'left';
+  ctx.fillText('BRAND EXPERIENCE STUDIO', M+56, M+26);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#98907F'; ctx.font = '400 22px "Instrument Sans"';
+  try{ ctx.letterSpacing = '0px'; }catch(e){}
+  ctx.fillText(new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}), W-M, M+26);
+  // title
+  ctx.textAlign = 'left'; ctx.fillStyle = '#26221C';
+  ctx.font = '700 ' + fitText(ctx, state.projectName, W-2*M, 64, '700', 'Space Grotesk') + 'px "Space Grotesk"';
+  ctx.fillText(state.projectName, M, M+112);
+  ctx.font = '600 30px "Space Grotesk"'; ctx.fillStyle = b.primary;
+  ctx.fillText(brandText(), M, M+172);
+  const tag = (b.tagline||'').trim();
+  if(tag){ ctx.font = '400 26px "Instrument Sans"'; ctx.fillStyle = '#5C564B'; ctx.fillText(tag, M, M+216); }
+  // viewport image, cover-cropped
+  const bx = M, by = M+260, bw = W-2*M, bh = 900;
+  const sr = Math.max(bw/img.width, bh/img.height);
+  const sw = bw/sr, sh = bh/sr, sx = (img.width-sw)/2, sy = (img.height-sh)/2;
+  ctx.fillStyle = '#fff'; ctx.fillRect(bx-1, by-1, bw+2, bh+2);
+  ctx.drawImage(img, sx, sy, sw, sh, bx, by, bw, bh);
+  ctx.strokeStyle = '#E4DDCF'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, bw, bh);
+  // meta
+  const my = by + bh + 70;
+  ctx.strokeStyle = '#E4DDCF'; ctx.beginPath(); ctx.moveTo(M, my-40); ctx.lineTo(W-M, my-40); ctx.stroke();
+  const stats = [
+    ['TEMPLATE', t ? t.name : 'Custom'],
+    ['OBJECTS IN SCENE', String(state.objects.length)],
+    ['LIGHTING MOOD', LIGHT_PRESETS[state.lighting.preset]?.label || 'Custom'],
+    ['ESTIMATED TOTAL', fmtMoney(total)],
+  ];
+  stats.forEach((s2, i)=>{
+    const x = M + i*((W-2*M)/4);
+    ctx.fillStyle = '#98907F'; ctx.font = '500 19px "Instrument Sans"';
+    try{ ctx.letterSpacing = '3px'; }catch(e){}
+    ctx.fillText(s2[0], x, my);
+    try{ ctx.letterSpacing = '0px'; }catch(e){}
+    ctx.fillStyle = i===3 ? b.primary : '#26221C';
+    ctx.font = '600 ' + fitText(ctx, s2[1], (W-2*M)/4 - 40, 34, '600', 'Space Grotesk') + 'px "Space Grotesk"';
+    ctx.fillText(s2[1], x, my+52);
+  });
+  // footer
+  ctx.fillStyle = '#98907F'; ctx.font = '400 21px "Instrument Sans"'; ctx.textAlign = 'left';
+  ctx.fillText('Illustrative concept only — cost figures are planning estimates, not vendor quotations.', M, H-80);
+  ctx.textAlign = 'right';
+  ctx.fillText('Generated with Brand Experience Studio', W-M, H-80);
+  return cv.toDataURL('image/png');
+}
+
+function openExportModal(){
+  let fmt = 'png', scale = 2, lastUrl = null, lastName = '';
+  openModal(`
+    <div class="m-head"><i data-lucide="download"></i><h3>Export</h3><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="m-body">
+      <div class="sec"><div class="sec-t">Image options</div>
+        <div class="row" style="gap:16px; margin-bottom:14px">
+          <div><div style="font-size:11.5px;color:var(--ink2);margin-bottom:6px">Format</div>
+            <div class="seg"><button data-fmt="png" class="active">PNG</button><button data-fmt="jpeg">JPEG</button></div></div>
+          <div><div style="font-size:11.5px;color:var(--ink2);margin-bottom:6px">Resolution</div>
+            <div class="seg"><button data-scale="1">1×</button><button data-scale="2" class="active">2×</button></div></div>
+        </div>
+        <div class="act-row" style="flex-direction:column; align-items:stretch; gap:8px">
+          <button class="btn" id="expView" style="justify-content:space-between"><span class="row" style="gap:8px"><i data-lucide="camera"></i>Viewport snapshot</span><span style="font-size:11px;color:var(--mut)">Current 3D view</span></button>
+          <button class="btn" id="expSheet" style="justify-content:space-between"><span class="row" style="gap:8px"><i data-lucide="presentation"></i>Concept sheet</span><span style="font-size:11px;color:var(--mut)">Branded presentation document</span></button>
+        </div>
+      </div>
+      <div class="export-preview" id="expPreview"><img id="expImg" alt="Export preview"></div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" data-close>Close</button>
+      <button class="btn primary" id="expDownload" disabled><i data-lucide="download"></i>Download</button>
+    </div>`);
+  const card = $('modalCard');
+  card.querySelectorAll('[data-fmt]').forEach(b=>b.addEventListener('click', ()=>{
+    fmt = b.dataset.fmt;
+    card.querySelectorAll('[data-fmt]').forEach(x=>x.classList.toggle('active', x===b));
+  }));
+  card.querySelectorAll('[data-scale]').forEach(b=>b.addEventListener('click', ()=>{
+    scale = +b.dataset.scale;
+    card.querySelectorAll('[data-scale]').forEach(x=>x.classList.toggle('active', x===b));
+  }));
+  const setLoading = (btn, on)=>{ btn.classList.toggle('loading', on); };
+  const showResult = (url, name)=>{
+    lastUrl = url; lastName = name;
+    $('expImg').src = url; $('expPreview').style.display = 'block';
+    $('expDownload').disabled = false;
+  };
+  $('expView').addEventListener('click', function(){
+    setLoading(this, true);
+    setTimeout(async ()=>{
+      try{
+        let url;
+        if(fmt === 'jpeg'){
+          const pngUrl = captureViewport(scale);
+          const img = await new Promise((res, rej)=>{ const i = new Image(); i.onload=()=>res(i); i.onerror=rej; i.src = pngUrl; });
+          const c2 = document.createElement('canvas');
+          c2.width = img.width; c2.height = img.height;
+          const cx = c2.getContext('2d');
+          cx.fillStyle = '#'+scene.background.getHexString(); cx.fillRect(0,0,c2.width,c2.height);
+          cx.drawImage(img, 0, 0);
+          url = c2.toDataURL('image/jpeg', .92);
+        } else url = captureViewport(scale);
+        showResult(url, `${slug(state.projectName)}-viewport.${fmt}`);
+        toast('Viewport captured — ready to download', 'success');
+      }catch(err){ toast('Export failed: ' + err.message, 'error'); }
+      setLoading(this, false);
+    }, 40);
+  });
+  $('expSheet').addEventListener('click', async function(){
+    setLoading(this, true);
+    try{
+      const url = await composeConceptSheet();
+      showResult(url, `${slug(state.projectName)}-concept-sheet.png`);
+      toast('Concept sheet composed — ready to download', 'success');
+    }catch(err){ toast('Sheet generation failed: ' + err.message, 'error'); }
+    setLoading(this, false);
+  });
+  $('expDownload').addEventListener('click', ()=>{
+    if(lastUrl){ download(lastUrl, lastName); toast('Saved to your downloads', 'success'); }
+  });
+}
+
+/* ============================================================
+   17. PRESENTATION MODE
+============================================================ */
+function setPresenting(on){
+  if(on === ui.presenting) return;
+  ui.presenting = on;
+  document.body.classList.toggle('present', on);
+  setSelected(null);
+  if(on){
+    ui.view = 'present';
+    tweenCamera(VIEWS.present.pos, VIEWS.present.target, 1200);
+    toast('Presentation mode — orbit freely, Esc to exit', 'info');
+  } else {
+    ui.view = 'orbit';
+    tweenCamera(VIEWS.orbit.pos, VIEWS.orbit.target, 900);
+  }
+  updateModeLabel(); updateToolbarUI(); updateStatusbar();
+}
+
+/* ============================================================
+   18. EVENTS — global wiring
+============================================================ */
+const typing = () => {
+  const e = document.activeElement;
+  return e && (e.tagName==='INPUT' || e.tagName==='TEXTAREA' || e.tagName==='SELECT' || e.isContentEditable);
+};
+window.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){
+    if(typing()) return;
+    e.preventDefault(); e.shiftKey ? redo() : undo(); return;
+  }
+  if(typing()) return;
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='y'){ e.preventDefault(); redo(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='d'){ e.preventDefault(); if(state.selection) duplicateObject(state.selection); return; }
+  switch(e.key){
+    case 'Delete': case 'Backspace': if(state.selection){ e.preventDefault(); deleteObject(state.selection); } break;
+    case 'Escape':
+      if($('modalBackdrop').classList.contains('show')) closeModal();
+      else if(ui.presenting) setPresenting(false);
+      else if(ui.renaming){ ui.renaming = null; renderPanel(); }
+      else setSelected(null);
+      break;
+    case 'w': case 'W': setGizmo('translate'); break;
+    case 'e': case 'E': setGizmo('rotate'); break;
+    case 'r': case 'R': setGizmo('scale'); break;
+    case 'f': case 'F': focusSelected(); break;
+    case 'g': case 'G': state.settings.grid = !state.settings.grid; applyEnvironment(); updateToolbarUI(); break;
+    case '?': openShortcutsModal(); break;
+  }
+});
+function setGizmo(mode){
+  ui.gizmo = mode; tc.setMode(mode); updateToolbarUI();
+}
+
+/* Topbar */
+ $('projectName').addEventListener('input', e=>{ state.projectName = e.target.value || 'Untitled Experience'; markDirty(); });
+ $('btnUndo').addEventListener('click', undo);
+ $('btnRedo').addEventListener('click', redo);
+ $('btnTemplates').addEventListener('click', openTemplatesModal);
+ $('btnPreview').addEventListener('click', ()=> setPresenting(!ui.presenting));
+ $('btnExport').addEventListener('click', openExportModal);
+ $('leftCollapse').addEventListener('click', ()=> document.body.classList.add('left-closed'));
+ $('rightCollapse').addEventListener('click', ()=> document.body.classList.add('right-closed'));
+ $('leftReopen').addEventListener('click', ()=> document.body.classList.remove('left-closed'));
+ $('rightReopen').addEventListener('click', ()=> document.body.classList.remove('right-closed'));
+ $('exitPresent').addEventListener('click', ()=> setPresenting(false));
+
+/* Toolbar */
+ $('toolbar').addEventListener('click', e=>{
+  const act = e.target.closest('[data-act]');
+  if(act){
+    const a = act.dataset.act;
+    if(a==='translate'||a==='rotate'||a==='scale') setGizmo(a);
+    else if(a==='focus') focusSelected();
+    else if(a==='resetcam') setView('orbit');
+    else if(a==='grid'){ state.settings.grid = !state.settings.grid; applyEnvironment(); updateToolbarUI(); markDirty(); }
+    else if(a==='keys') openShortcutsModal();
+    return;
+  }
+  const v = e.target.closest('[data-view]');
+  if(v) setView(v.dataset.view);
+});
+
+/* Tabs */
+ $('tabs').addEventListener('click', e=>{
+  const b = e.target.closest('[data-tab]');
+  if(b) switchTab(b.dataset.tab);
+});
+
+/* Library */
+ $('libSearchInp').addEventListener('input', e=>{ ui.search = e.target.value; renderLibrary(); });
+ $('libraryList').addEventListener('click', e=>{
+  const head = e.target.closest('.lib-head');
+  if(head){
+    const c = head.dataset.cat;
+    ui.openCats.has(c) ? ui.openCats.delete(c) : ui.openCats.add(c);
+    renderLibrary(); return;
+  }
+  const item = e.target.closest('[data-asset]');
+  if(item) addObject(item.dataset.asset);
+});
+
+/* Right panel — delegated */
+const panelBody = $('panelBody');
+panelBody.addEventListener('click', e=>{
+  const act = e.target.closest('[data-act]');
+  if(act){
+    const a = act.dataset.a || act.dataset.act;
+    if(a==='focus') focusSelected();
+    else if(a==='dup' && state.selection) duplicateObject(state.selection);
+    else if(a==='del' && state.selection) deleteObject(state.selection);
+    else if(a==='apply-template') openTemplatesModal();
+    else if(a==='clear-objects'){
+      if(!state.objects.length){ toast('The scene is already empty', 'info'); return; }
+      state.objects = []; state.selection = null; rebuildScene(); commit(true);
+      toast('Objects cleared — Ctrl+Z to undo', 'info');
+    }
+    else if(a==='reset-project'){
+      confirmModal('Reset entire project?', 'This clears the scene, brand settings and saved data in this browser, then reloads the Luxury Showroom template. This cannot be undone.', 'Reset project', ()=>{
+        try{ localStorage.removeItem(STORE_KEY); }catch(err){}
+        state = defaultState();
+        applyTemplate('showroom');
+        $('projectName').value = state.projectName;
+        history = []; histIdx = -1; pushHistory(); updateHistoryUI();
+        renderPanel();
+      });
+    }
+    else if(a==='logo-upload') $('logoFile').click();
+    else if(a==='logo-remove'){
+      state.brand.logo = null; brandLogoImg = null;
+      redrawSignage(); renderPanel(); markDirty();
+      toast('Logo removed — signage falls back to the wordmark', 'info');
+    }
+    return;
+  }
+  const sw = e.target.closest('[data-swatch]');
+  if(sw){
+    state.brand[sw.dataset.swatch] = sw.dataset.color;
+    applyBrand(); renderPanel(); markDirty(); return;
+  }
+  const preset = e.target.closest('[data-preset]');
+  if(preset){
+    const k = preset.dataset.preset;
+    state.lighting.preset = k;
+    Object.assign(state.lighting[state.lighting.mode], LIGHT_PRESETS[k]);
+    applyLighting(); renderPanel(); markDirty();
+    toast(`Lighting mood — ${LIGHT_PRESETS[k].label}`, 'info'); return;
+  }
+  const lm = e.target.closest('[data-lmode]');
+  if(lm){
+    state.lighting.mode = lm.dataset.lmode;
+    applyLighting(); renderPanel(); return;
+  }
+  const row = e.target.closest('[data-sel]');
+  if(row){
+    if(e.target.closest('[data-eye]') || e.target.closest('[data-del]')) return;
+    if(ui.renaming) return;
+    setSelected(row.dataset.sel); return;
+  }
+  const eye = e.target.closest('[data-eye]');
+  if(eye){
+    const o = state.objects.find(x=>x.id===eye.dataset.eye); if(!o) return;
+    o.visible = !o.visible;
+    const n = objectNodes.get(o.id); if(n) n.visible = o.visible;
+    syncSelection(); renderPanel(); commit(false); return;
+  }
+  const del = e.target.closest('[data-del]');
+  if(del) deleteObject(del.dataset.del);
+});
+panelBody.addEventListener('dblclick', e=>{
+  const row = e.target.closest('[data-sel]');
+  if(row && !e.target.closest('[data-eye]') && !e.target.closest('[data-del]')){
+    ui.renaming = row.dataset.sel;
+    renderPanel();
+    const inp = panelBody.querySelector('[data-rename]');
+    if(inp){ inp.focus(); inp.select(); }
+  }
+});
+function finishRename(){
+  const inp = panelBody.querySelector('[data-rename]');
+  if(!inp) return;
+  const o = state.objects.find(x=>x.id===ui.renaming);
+  if(o && inp.value.trim()) o.name = inp.value.trim();
+  ui.renaming = null;
+  renderPanel(); commit(false);
+}
+panelBody.addEventListener('focusout', e=>{ if(e.target.matches('[data-rename]')) finishRename(); });
+panelBody.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && e.target.matches('[data-rename]')) finishRename();
+  if(e.key==='Escape' && e.target.matches('[data-rename]')){ ui.renaming = null; renderPanel(); }
+});
+
+function applyPanelTransform(el){
+  const o = sel(); if(!o) return;
+  const v = parseFloat(el.value); if(isNaN(v)) return;
+  const k = el.dataset.prop;
+  const idx = {px:0,py:1,pz:2,rx:0,ry:1,rz:2,sx:0,sy:1,sz:2}[k];
+  const group = k[0]==='p' ? o.position : k[0]==='r' ? o.rotation : o.scale;
+  group[idx] = k[0]==='r' ? v : v;
+  applyTransformToNode(o);
+  if(state.selection){ const n = objectNodes.get(state.selection); if(n) selHelper.setFromObject(n); }
+}
+panelBody.addEventListener('input', e=>{
+  const el = e.target;
+  if(el.dataset.prop){
+    const k = el.dataset.prop;
+    if(['px','py','pz','rx','ry','rz','sx','sy','sz'].includes(k)){ applyPanelTransform(el); return; }
+    const o = sel(); if(!o) return;
+    if(k==='rough'){ o.rough = +el.value; o.__applied = true; const m = objectNodes.get(o.id)?.userData.mainMat; if(m) m.roughness = o.rough; el.closest('.srow').querySelector('b').textContent = (+el.value).toFixed(2); }
+    if(k==='metal'){ o.metal = +el.value; const m = objectNodes.get(o.id)?.userData.mainMat; if(m) m.metalness = o.metal; el.closest('.srow').querySelector('b').textContent = (+el.value).toFixed(2); }
+    if(k==='lightI'){ o.lightI = +el.value; const n = objectNodes.get(o.id); if(n) applyLightIntensity(n, o.lightI); el.closest('.srow').querySelector('b').textContent = (+el.value).toFixed(2)+'×'; }
+    if(k==='color'){ o.color = el.value; o.colorCustom = true; const m = objectNodes.get(o.id)?.userData.mainMat; if(m) m.color.set(el.value); const hx = el.parentElement.querySelector('[data-hex]'); if(hx) hx.textContent = el.value.toUpperCase(); }
+  }
+  if(el.dataset.brand){
+    const k = el.dataset.brand;
+    state.brand[k] = el.value;
+    applyBrand(); markDirty();
+    const hx = $('hex'+k[0].toUpperCase()+k.slice(1)); if(hx) hx.textContent = el.value.toUpperCase();
+  }
+  if(el.dataset.light){
+    const k = el.dataset.light, cfg = state.lighting[state.lighting.mode];
+    if(k==='shadows'){ state.lighting.shadows = el.checked; applyLighting(); markDirty(); return; }
+    if(k==='color') cfg.color = el.value;
+    else cfg[k] = +el.value;
+    applyLighting(); markDirty();
+    const sl = el.closest('.srow'); if(sl) sl.querySelector('b').textContent = (+el.value).toFixed(2);
+  }
+  if(el.dataset.env){
+    const k = el.dataset.env;
+    if(k==='floorWood'){ state.env.floorWood = el.checked; }
+    else if(k==='grid'){ state.settings.grid = el.checked; }
+    else state.env[k] = el.value;
+    applyEnvironment(); markDirty(); updateToolbarUI();
+  }
+});
+panelBody.addEventListener('change', e=>{
+  const el = e.target;
+  if(el.dataset.prop){
+    const k = el.dataset.prop;
+    const o = sel();
+    if(!o){ if(k==='currency'){} }
+    if(o){
+      if(['px','py','pz','rx','ry','rz','sx','sy','sz'].includes(k)){ applyPanelTransform(el); commit(false); return; }
+      if(k==='material'){
+        o.material = el.value;
+        if(!o.colorCustom) o.color = MAT_PRESETS[o.material].color;
+        const n = objectNodes.get(o.id);
+        if(n) applyMaterialPreset(n.userData.mainMat, o.material, o.color);
+        o.rough = MAT_PRESETS[o.material].roughness; o.metal = MAT_PRESETS[o.material].metalness;
+        renderPanel(); commit(false); return;
+      }
+      if(k==='name'){ o.name = el.value.trim() || o.name; el.value = o.name; commit(false); renderSceneList(); return; }
+      if(k==='cost'){ o.cost = Math.max(0, +el.value || 0); renderCost(); commit(false); return; }
+      if(k==='visible'){
+        o.visible = el.checked;
+        const n = objectNodes.get(o.id); if(n) n.visible = o.visible;
+        syncSelection(); commit(false); return;
+      }
+      if(k==='color' || k==='rough' || k==='metal' || k==='lightI'){ commit(false); return; }
+    }
+  }
+  if(el.dataset.currency){ state.currency = el.value; renderCost(); renderLibrary(); markDirty(); }
+  if(el.dataset.brand || el.dataset.light || el.dataset.env) commit(false);
+});
+
+/* Logo upload */
+ $('logoFile').addEventListener('change', ()=>{
+  const f = $('logoFile').files[0];
+  $('logoFile').value = '';
+  if(!f) return;
+  if(!f.type.startsWith('image/')){ toast('That file is not an image — try a PNG or JPG', 'error'); return; }
+  if(f.size > 2.5*1024*1024){ toast('Image is too large — keep logos under 2.5 MB', 'error'); return; }
+  const rd = new FileReader();
+  rd.onload = ()=>{
+    const img = new Image();
+    img.onload = ()=>{
+      brandLogoImg = img;
+      state.brand.logo = rd.result;
+      redrawSignage(); renderPanel(); markDirty();
+      toast('Logo applied to signage and displays', 'success');
+    };
+    img.onerror = ()=> toast('That image could not be read — try a different file', 'error');
+    img.src = rd.result;
+  };
+  rd.onerror = ()=> toast('Could not read that file', 'error');
+  rd.readAsDataURL(f);
+});
+
+/* ============================================================
+   19. RENDER LOOP & RESIZE
+============================================================ */
+window.addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+function tick(now){
+  requestAnimationFrame(tick);
+  stepTween(now);
+  orbit.update();
+  if(selHelper.visible) selHelper.update();
+  doHover();
+  renderer.render(scene, camera);
+}
+
+/* ============================================================
+   20. INIT
+============================================================ */
+(function init(){
+  const restored = tryRestore();
+  if(!restored){
+    state.objects = TEMPLATE_BY_ID.showroom.objects.map(objectFromSpec);
+    state.lighting.preset = 'dramatic';
+    Object.assign(state.lighting.day, LIGHT_PRESETS.dramatic);
+  }
+  if(state.brand.logo){
+    const img = new Image();
+    img.onload = ()=>{ brandLogoImg = img; redrawSignage(); };
+    img.src = state.brand.logo;
+  }
+  $('projectName').value = state.projectName;
+
+  applyEnvironment();
+  applyLighting();
+  applyBrand();
+  rebuildScene();
+  renderLibrary();
+  renderPanel();
+  renderSceneList();
+  renderCost();
+  updateModeLabel();
+  updateToolbarUI();
+  updateStatusbar();
+  pushHistory(); updateHistoryUI();
+  refreshIcons();
+
+  document.fonts.ready.then(()=>{ redrawSignage(); });
+
+  requestAnimationFrame(tick);
+  setTimeout(()=>{
+    $('boot').classList.add('hide');
+    setTimeout(()=>$('boot').remove(), 650);
+    tweenCamera(VIEWS.orbit.pos, VIEWS.orbit.target, 1500);
+  }, 700);
+})();
+</script>
+</body>
+</html>
